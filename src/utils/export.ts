@@ -20,9 +20,53 @@ const FORMAT_FOLDER: Record<SlideFormat, string> = {
   'ipad-13':   'ios/ipad-13',
 }
 
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
 async function captureElement(el: HTMLElement, format: SlideFormat): Promise<string> {
   const { width, height } = FORMAT_SIZE[format]
-  return toPng(el, { width, height, pixelRatio: 1 })
+
+  // Check for a WebGL canvas (3D frames). Must be captured before html-to-image
+  // because html-to-image cannot read WebGL content — it renders the canvas as blank.
+  const webglCanvas = el.querySelector('canvas') as HTMLCanvasElement | null
+
+  if (!webglCanvas) {
+    return toPng(el, { width, height, pixelRatio: 1 })
+  }
+
+  // Grab WebGL frame while the buffer is still live (preserveDrawingBuffer: true)
+  const webglDataUrl = webglCanvas.toDataURL('image/png')
+
+  // Compute the WebGL canvas position in the slide's full-res coordinate space.
+  // The slide element has transform:scale(s), so divide bounding rects by that scale.
+  const slideRect  = el.getBoundingClientRect()
+  const webglRect  = webglCanvas.getBoundingClientRect()
+  const scaleX     = slideRect.width  / width
+  const scaleY     = slideRect.height / height
+  const webglX     = (webglRect.left - slideRect.left) / scaleX
+  const webglY     = (webglRect.top  - slideRect.top)  / scaleY
+  const webglW     = webglRect.width  / scaleX
+  const webglH     = webglRect.height / scaleY
+
+  // Capture DOM layer (WebGL area will be transparent/blank here)
+  const domDataUrl = await toPng(el, { width, height, pixelRatio: 1 })
+
+  // Composite: DOM background + WebGL frame on top
+  const composite  = document.createElement('canvas')
+  composite.width  = width
+  composite.height = height
+  const ctx = composite.getContext('2d')!
+  const [domImg, webglImg] = await Promise.all([loadImage(domDataUrl), loadImage(webglDataUrl)])
+  ctx.drawImage(domImg,   0, 0, width, height)
+  ctx.drawImage(webglImg, webglX, webglY, webglW, webglH)
+
+  return composite.toDataURL('image/png')
 }
 
 function triggerDownload(url: string, filename: string) {

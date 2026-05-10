@@ -34,7 +34,7 @@ export const frames: FrameDef[] = [
   {
     id: 'minimal',
     label: 'Minimal',
-    formats: ['phone', 'iphone-69', 'iphone-65', 'ipad-13'],
+    formats: ['phone', 'iphone-69', 'iphone-65', 'ipad-13', 'tablet-7', 'tablet-10'],
     outerRx: 44,
   },
 
@@ -67,8 +67,7 @@ export const frames: FrameDef[] = [
     label: 'iPhone 3D',
     formats: ['iphone-69', 'iphone-65'],
     tilt: true,
-    outerRx: 55,
-    bezel: { width: 16, color: TITAN_BEZEL },
+    device3d: { thickness: 8, outerRx: 55, bezelWidth: 16, shellColor: TITAN_BEZEL },
   },
 
   {

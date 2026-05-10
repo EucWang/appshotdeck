@@ -24,7 +24,7 @@ function HiddenExportCanvases({
     [canvasRefs]
   )
   return (
-    <div aria-hidden style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none', visibility: 'hidden' }}>
+    <div aria-hidden style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none' }}>
       {slides.map((slide) => (
         <SlideCanvas key={slide.id} ref={setRef(slide.id)} slide={slide} />
       ))}

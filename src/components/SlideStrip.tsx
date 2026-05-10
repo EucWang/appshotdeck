@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Plus, X, Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
@@ -13,8 +14,10 @@ const FORMAT_BADGE: Record<string, string> = {
 
 export function SlideStrip() {
   const { t } = useTranslation()
-  const { slides, activeSlideId, addSlide, removeSlide, duplicateSlide, setActiveSlide } =
+  const { slides, activeSlideId, addSlide, removeSlide, duplicateSlide, setActiveSlide, reorderSlides } =
     useEditorStore()
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [overIdx, setOverIdx] = useState<number | null>(null)
 
   return (
     <div className="h-28 flex-shrink-0 surface border-t border-subtle flex items-center gap-3 px-4 overflow-x-auto">
@@ -27,14 +30,31 @@ export function SlideStrip() {
             : { background: `linear-gradient(${bg.angle}deg, ${bg.from}, ${bg.to})` }
 
         const isLandscape = slide.format === 'tablet-7' || slide.format === 'tablet-10'
-        const thumbW = isLandscape ? 80 : 46
+        const isIpad = slide.format === 'ipad-13'
+        const thumbW = isLandscape ? 80 : isIpad ? 56 : 46
         const thumbH = isLandscape ? 46 : 74
+        const isDragging = dragIdx === idx
+        const isOver = overIdx === idx && dragIdx !== idx
 
         return (
-          <div key={slide.id} className="relative flex-shrink-0 group">
+          <div
+            key={slide.id}
+            className="relative flex-shrink-0 group"
+            draggable
+            onDragStart={() => setDragIdx(idx)}
+            onDragOver={(e) => { e.preventDefault(); setOverIdx(idx) }}
+            onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+            onDrop={(e) => {
+              e.preventDefault()
+              if (dragIdx !== null && dragIdx !== idx) reorderSlides(dragIdx, idx)
+              setDragIdx(null); setOverIdx(null)
+            }}
+            style={{ opacity: isDragging ? 0.4 : 1 }}
+          >
             <button
               onClick={() => setActiveSlide(slide.id)}
               className={`relative rounded-lg border-2 overflow-hidden transition-all ${
+                isOver ? 'border-indigo-400 scale-105' :
                 isActive ? 'border-indigo-400' : 'border-black/20 dark:border-white/20 hover:border-black/40 dark:hover:border-white/40'
               }`}
               style={{ width: thumbW, height: thumbH, ...bgStyle }}

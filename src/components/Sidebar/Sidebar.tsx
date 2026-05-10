@@ -71,7 +71,8 @@ export function Sidebar() {
             >
               {p === 'android'
                 ? `🤖 ${t('sidebar.platform_android')}`
-                : `🍎 ${t('sidebar.platform_ios')}`}
+                : <span className="flex items-center justify-center gap-1">🍎 {t('sidebar.platform_ios')} <span className="text-[9px] font-semibold bg-amber-400/20 text-amber-400 px-1 py-0.5 rounded">Beta</span></span>
+              }
             </button>
           ))}
         </div>

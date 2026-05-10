@@ -43,30 +43,31 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const { W, H, slotW, slotH, landscape, frameViewBox } = fmt
     const frame = frameById(slide.frame)
 
-    // Compute pixel values scaled from viewBox units to slot pixels
+    // Apply device scale (portrait only; tablets keep their fixed layout)
+    const deviceScaleFactor = (slide.deviceScale ?? 100) / 100
+    const dSlotW = Math.round(slotW * deviceScaleFactor)
+    const dSlotH = Math.round(slotH * deviceScaleFactor)
+
+    // Compute pixel values scaled from viewBox units to (scaled) slot pixels
     const vbW = Number(frameViewBox.split(' ')[2])
     const screenshotRadius = frame.outerRx != null
-      ? Math.round(frame.outerRx * slotW / vbW)
+      ? Math.round(frame.outerRx * dSlotW / vbW)
       : undefined
     const bezelWidth = frame.bezel != null
-      ? Math.round(frame.bezel.width * slotW / vbW)
+      ? Math.round(frame.bezel.width * dSlotW / vbW)
       : undefined
 
     // ── Portrait layout (phone / iPhone / iPad) ───────────────────────────
-    const slotX_portrait = Math.round((W - slotW) / 2)
-    const slotY_portrait =
-      slide.textPosition === 'top'
-        ? Math.round(H * 0.36)
-        : Math.round(H * 0.05)
+    const slotX_portrait = Math.round((W - dSlotW) / 2)
+    const slotY_portrait = Math.round((H - dSlotH) / 2)
 
     // ── Landscape layout (Android tablets) ───────────────────────────────
-    const textColW  = Math.round(W * 0.28)
-    const deviceColX = textColW + Math.round(W * 0.04)
-    const slotX_landscape = deviceColX + Math.round(((W - deviceColX) - slotW) / 2)
-    const slotY_landscape = Math.round((H - slotH) / 2)
+    const slotX_landscape = Math.round((W - dSlotW) / 2)
+    const slotY_landscape = Math.round((H - dSlotH) / 2)
 
-    const slotX = landscape ? slotX_landscape : slotX_portrait
-    const slotY = landscape ? slotY_landscape : slotY_portrait
+    const offsetPx = Math.round((landscape ? W : H) * ((slide.deviceOffset ?? 0) / 100))
+    const slotX = (landscape ? slotX_landscape : slotX_portrait) + (landscape ? offsetPx : 0)
+    const slotY = (landscape ? slotY_landscape : slotY_portrait) + (landscape ? 0 : offsetPx)
 
     // Relative font sizing — scales with canvas width for all formats
     const headlineSize = Math.round(W * (landscape ? 0.036 : 0.063))
@@ -101,12 +102,12 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               justifyContent: 'center',
             }}
           >
-            {slide.headline && (
+            {(slide.showHeadline ?? true) && slide.headline && (
               <div style={{ fontSize: headlineSize, fontWeight: 700, lineHeight: 1.2, marginBottom: 24, color: slide.textColor }}>
                 {slide.headline}
               </div>
             )}
-            {slide.subtitle && (
+            {(slide.showSubtitle ?? true) && slide.subtitle && (
               <div style={{ fontSize: subtitleSize, fontWeight: 400, lineHeight: 1.5, color: slide.subtitleColor }}>
                 {slide.subtitle}
               </div>
@@ -121,16 +122,16 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               right: Math.round(W * 0.07),
               top: slide.textPosition === 'top'
                 ? Math.round(H * 0.055)
-                : slotY + slotH + Math.round(H * 0.03),
+                : slotY + dSlotH + Math.round(H * 0.03),
               textAlign: 'center',
             }}
           >
-            {slide.headline && (
+            {(slide.showHeadline ?? true) && slide.headline && (
               <div style={{ fontSize: headlineSize, fontWeight: 700, lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor }}>
                 {slide.headline}
               </div>
             )}
-            {slide.subtitle && (
+            {(slide.showSubtitle ?? true) && slide.subtitle && (
               <div style={{ fontSize: subtitleSize, fontWeight: 400, lineHeight: 1.45, color: slide.subtitleColor }}>
                 {slide.subtitle}
               </div>
@@ -141,14 +142,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
         {/* ── Device slot ───────────────────────────────────────────────── */}
         <div
           style={{
-            position: 'absolute', left: slotX, top: slotY, width: slotW, height: slotH,
+            position: 'absolute', left: slotX, top: slotY, width: dSlotW, height: dSlotH,
           }}
         >
           {frame.device3d ? (
             <Device3D
               spec={frame.device3d}
-              slotW={slotW}
-              slotH={slotH}
+              slotW={dSlotW}
+              slotH={dSlotH}
               vbW={vbW}
               tilt={slide.frameTilt}
               screenshotDataUrl={slide.screenshotDataUrl}
@@ -160,7 +161,6 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               }}
             >
               {frame.bezel ? (
-                // Phone body — background color IS the bezel, clips children to outer radius
                 <div style={{
                   position: 'absolute', inset: 0,
                   borderRadius: screenshotRadius,
@@ -168,25 +168,23 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
                   overflow: 'hidden',
                   boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
                 }}>
-                  {/* Screen area — inset by bezel width so screenshot sits inside the frame */}
                   <div style={{
                     position: 'absolute',
                     inset: bezelWidth,
                     borderRadius: Math.max(0, (screenshotRadius ?? 0) - (bezelWidth ?? 0)),
                     overflow: 'hidden',
                   }}>
-                    <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={slotW} />
+                    <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={dSlotW} />
                   </div>
                 </div>
               ) : (
-                // No-bezel (minimal) — clip to outer radius
                 <div style={{
                   position: 'absolute', inset: 0,
                   borderRadius: screenshotRadius,
                   overflow: 'hidden',
                   boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
                 }}>
-                  <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={slotW} />
+                  <ScreenContent screenshotDataUrl={slide.screenshotDataUrl} slotW={dSlotW} />
                 </div>
               )}
             </div>

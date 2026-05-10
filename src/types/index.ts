@@ -35,6 +35,10 @@ export interface Slide {
   subtitleColor: string
   frameTilt: number
   textPosition: TextPosition
+  deviceOffset: number
+  deviceScale: number
+  showHeadline: boolean
+  showSubtitle: boolean
 }
 
 export interface EditorState {
@@ -45,4 +49,5 @@ export interface EditorState {
   removeSlide: (id: string) => void
   setActiveSlide: (id: string) => void
   updateSlide: (id: string, patch: Partial<Slide>) => void
+  reorderSlides: (fromIndex: number, toIndex: number) => void
 }

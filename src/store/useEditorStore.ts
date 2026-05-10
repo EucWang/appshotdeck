@@ -25,6 +25,10 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   subtitleColor: '#ffffff',
   frameTilt: 18,
   textPosition: 'top',
+  deviceOffset: ['phone', 'iphone-69', 'iphone-65', 'ipad-13'].includes(format) ? 30 : 16,
+  deviceScale: 100,
+  showHeadline: true,
+  showSubtitle: true,
 })
 
 export const useEditorStore = create<EditorState>()(
@@ -66,6 +70,14 @@ export const useEditorStore = create<EditorState>()(
         set((s) => ({
           slides: s.slides.map((sl) => (sl.id === id ? { ...sl, ...patch } : sl)),
         })),
+
+      reorderSlides: (from, to) =>
+        set((s) => {
+          const slides = [...s.slides]
+          const [moved] = slides.splice(from, 1)
+          slides.splice(to, 0, moved)
+          return { slides }
+        }),
     }),
     {
       name: 'appshotdeck-editor',

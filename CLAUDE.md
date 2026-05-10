@@ -2,7 +2,7 @@
 
 ## What this is
 
-AppShotDeck is a browser-only marketing screenshot composer for Play Store and App Store. No backend. State lives in localStorage via Zustand persist. Export is DOM → PNG via html-to-image.
+AppShotDeck is a browser-only marketing screenshot composer for Play Store and App Store. No backend. State lives in localStorage via Zustand persist. Export is DOM → PNG via html-to-image + WebGL compositing for 3D frames.
 
 ## Dev commands
 
@@ -18,7 +18,7 @@ npm run lint      # eslint
 
 Two frame types, distinguished by whether `device3d` is present on the `FrameDef`:
 
-- **Flat frames** (`outerRx` + optional `bezel`) — rendered via nested CSS divs in `SlideCanvas.tsx`. Outer div = shell color + border-radius. Inner div = inset by bezel width.
+- **Flat frames** (`outerRx` + optional `bezel`) — rendered via nested CSS divs in `SlideCanvas.tsx`.
 - **3D frames** (`device3d: Device3DSpec`) — rendered via `Device3D.tsx` (WebGL). Body = `ExtrudeGeometry`, screen = `ShapeGeometry` with manually normalized UVs.
 
 ### SlideCanvas (`src/components/Canvas/SlideCanvas.tsx`)
@@ -26,31 +26,44 @@ Two frame types, distinguished by whether `device3d` is present on the `FrameDef
 - Always renders at full export resolution (e.g. 1080×1920). CSS `transform: scale()` shrinks it for preview.
 - Branches on `frame.device3d` to choose flat CSS vs `<Device3D>`.
 - `vbW` = viewBox width parsed from `frameViewBox` string — used to convert outerRx / bezelWidth from viewBox units to pixel units.
+- `deviceScaleFactor = (slide.deviceScale ?? 100) / 100` — scales both slot dimensions uniformly.
+- Portrait device Y: `Math.round((H - dSlotH) / 2) + Math.round(H * deviceOffset / 100)`. **0 = canvas center**, +30 = default layout position (below center).
+- Landscape device X: same center-based formula using W. 0 = canvas center, +16 = default column position.
 
 ### Device3D (`src/components/Canvas/Device3D.tsx`)
 
 Critical details for the 3D renderer:
 
 - `flat` prop on `<Canvas>` is **required** — sets `gl.toneMapping = NoToneMapping`. Removing it triggers ACESFilmic which darkens the screenshot color.
-- ExtrudeGeometry with `depth=0.068, bevel=0.016` creates geometry from local z = -bevel to z = depth + bevel. Body mesh at position z = -(depth/2) → world z range [-0.050, +0.050]. Screen mesh must be at z > 0.050 to clear the bevel tip — currently `depth/2 + bevel + 0.001 = 0.051`.
-- Transparent body (opacity < 1) renders in the transparent pass, AFTER opaque screen. If body bevel tip is in front of the screen, it passes the depth test and draws over the screenshot. **Do not move the screen behind the body bevel tip.**
-- `SizeEnforcer` compares `el.width !== Math.round(w * dpr)` (device pixels), not just `w`. Required to avoid an infinite resize loop on retina displays.
-- `preserveDrawingBuffer: true` is set so `gl.domElement.toDataURL()` works for export.
+- ExtrudeGeometry with `depth=0.068, bevel=0.016`: body mesh at z=-(depth/2) → world z range [-0.050, +0.050]. Screen mesh must be at z > 0.050 → currently `depth/2 + bevel + 0.001 = 0.051`. **Do not move screen behind the body bevel tip** — transparent body renders after opaque screen and will overdraw it.
+- `SizeEnforcer` compares `el.width !== Math.round(w * dpr)` (device pixels). Required to avoid infinite resize loop on retina.
+- `preserveDrawingBuffer: true` — required so `toDataURL()` works for export.
 
 ### Export (`src/utils/export.ts`)
 
-- Uses `html-to-image` (`toPng`) to capture the full-res DOM element.
-- **Known limitation**: `html-to-image` cannot capture WebGL canvas content — slides using 3D frames will export as empty/blank canvas. Fix requires intercepting the WebGL canvas and compositing it separately.
+- For **flat frames**: `html-to-image` (`toPng`) captures the full-res DOM element directly.
+- For **3D frames**: WebGL content can't be captured by html-to-image. Fix: call `webglCanvas.toDataURL()` first (before html-to-image runs), then composite it on top of the DOM PNG using a `<canvas>` + `drawImage()`. Position is derived from `getBoundingClientRect()` divided by the CSS scale factor.
+- **Critical**: the hidden export container in `App.tsx` must NOT use `visibility: hidden` — it's an inherited CSS property and makes html-to-image capture blank PNGs. Use `left: -9999px` only.
 
 ### Project save/load (`src/utils/project.ts`)
 
 - Saves as ZIP: `config.json` (all slide settings) + `images/<id>.png` (one file per slide screenshot).
-- Screenshots are stored as real PNG files, not base64 in JSON.
+- Screenshots stored as real PNG files, not base64 in JSON.
 
 ### State (`src/store/useEditorStore.ts`)
 
 - Zustand with `persist` middleware → localStorage.
-- Key slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl` (base64), `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`.
+- Key slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl` (base64), `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`.
+- New fields default: `deviceOffset` = 30 for portrait phones/iPad, 16 for tablets. `deviceScale` = 100. `showHeadline` / `showSubtitle` = true.
+- Always add `?? default` fallbacks when reading new fields in components — old persisted slides won't have them.
+
+### FramePanel device controls (`src/components/Sidebar/FramePanel.tsx`)
+
+- **Pos slider** (-30 to +30): vertical offset for portrait (phones/iPad), horizontal for landscape (tablets). 0 = canvas center.
+- **Size slider** (60–100%): scales device slot uniformly. Not available for ipad-13 (no — actually it IS available).
+- **Center button**: sets deviceOffset = 0. `AlignCenterVertical` for portrait, `AlignCenterHorizontal` for landscape.
+- **Reset button**: restores default offset (30 for phones/iPad, 16 for tablets).
+- `DEFAULT_OFFSET` map drives reset values. `RESIZABLE_FORMATS` and `PORTRAIT_PHONE_FORMATS` sets control which controls appear.
 
 ## Format configs (SlideCanvas.tsx)
 

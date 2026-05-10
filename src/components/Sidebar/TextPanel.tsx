@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Eye, EyeOff } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 
 export function TextPanel() {
@@ -10,7 +11,16 @@ export function TextPanel() {
   return (
     <div className="p-4 space-y-4">
       <div className="space-y-1">
-        <label className="text-xs text-muted uppercase tracking-wider">{t('text.headline')}</label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs text-muted uppercase tracking-wider">{t('text.headline')}</label>
+          <button
+            onClick={() => updateSlide(activeSlideId, { showHeadline: !slide.showHeadline })}
+            className="text-muted hover:text-foreground transition-colors p-0.5"
+            title={slide.showHeadline ? 'Hide headline' : 'Show headline'}
+          >
+            {slide.showHeadline ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+        </div>
         <textarea
           value={slide.headline}
           onChange={(e) => updateSlide(activeSlideId, { headline: e.target.value })}
@@ -21,7 +31,16 @@ export function TextPanel() {
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-muted uppercase tracking-wider">{t('text.subtitle')}</label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs text-muted uppercase tracking-wider">{t('text.subtitle')}</label>
+          <button
+            onClick={() => updateSlide(activeSlideId, { showSubtitle: !slide.showSubtitle })}
+            className="text-muted hover:text-foreground transition-colors p-0.5"
+            title={slide.showSubtitle ? 'Hide subtitle' : 'Show subtitle'}
+          >
+            {slide.showSubtitle ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+        </div>
         <textarea
           value={slide.subtitle}
           onChange={(e) => updateSlide(activeSlideId, { subtitle: e.target.value })}

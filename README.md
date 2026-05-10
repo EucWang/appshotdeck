@@ -5,13 +5,15 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 ## Features
 
 - **Multi-format support** — Phone, Tablet 7", Tablet 10", iPhone 6.9", iPhone 6.5", iPad 13"
-- **Device frames** — Minimal, Android flat, Android 3D (tilted), iPhone flat, iPhone 3D, iPad flat
+- **Device frames** — Minimal (all formats), Android flat, Android 3D, iPhone flat, iPhone 3D, Android Tab, iPad
 - **3D frames** — Real-time WebGL rendering via Three.js with adjustable tilt angle
+- **Device controls** — Per-slide position (vertical/horizontal), size scale, and one-click canvas centering
 - **Background system** — 6 gradient presets, 6 solid presets, custom color/gradient picker
-- **Text panel** — Headline + subtitle with color and top/bottom position control
-- **Slide strip** — Up to 8 slides per project, duplicate/remove, per-slide format badge
+- **Text panel** — Headline + subtitle with color, top/bottom position, and individual show/hide toggle
+- **Slide strip** — Up to 8 slides, drag to reorder, duplicate/remove, per-slide format badge
 - **Project save/load** — ZIP export (config.json + images/) and ZIP import
 - **Export** — Single PNG or all slides as a ZIP organized by format folder
+- **3D export** — WebGL canvas composited onto the DOM capture for pixel-accurate 3D frame exports
 - **Persistent** — State survives hot reloads via localStorage (Zustand persist)
 - **Offline-first** — All fonts bundled, no CDN dependencies
 
@@ -55,7 +57,7 @@ src/
   components/
     Canvas/         # SlideCanvas, Device3D (WebGL), ScreenContent
     Sidebar/        # FramePanel, BackgroundPanel, TextPanel, UploadPanel
-    SlideStrip.tsx  # Slide thumbnails strip
+    SlideStrip.tsx  # Slide thumbnails strip (drag to reorder)
     Header.tsx      # Export buttons, project save/load
   data/
     frames.ts       # Frame definitions (flat + 3D specs)
@@ -63,18 +65,22 @@ src/
   store/
     useEditorStore.ts  # Main editor state (Zustand + persist)
   utils/
-    export.ts       # PNG / ZIP export logic
+    export.ts       # PNG / ZIP export with WebGL compositing
     project.ts      # Project save/load (ZIP format)
   locales/          # i18n strings (en, es)
 ```
 
 ## Architecture Notes
 
-**Frame rendering** — Flat frames use nested CSS divs (outer div = shell, inner div = screen area). 3D frames use a WebGL canvas via `Device3D.tsx` with Three.js `ExtrudeGeometry` for the body and `ShapeGeometry` for the screen.
+**Frame rendering** — Flat frames use nested CSS divs. 3D frames use a WebGL canvas via `Device3D.tsx` with Three.js `ExtrudeGeometry` for the body and `ShapeGeometry` for the screen.
 
-**Canvas scaling** — Slide canvases always render at full export resolution. A CSS `transform: scale()` shrinks them for the preview. `html-to-image` captures the full-res DOM element.
+**Device positioning** — Each slide has `deviceOffset` (0 = canvas center, ±30% range) and `deviceScale` (60–100%). Portrait formats shift vertically; landscape tablets shift horizontally.
 
-**Project format** — Screenshots are stored as real PNG files inside the ZIP (not base64 in JSON), keeping projects small and images directly accessible.
+**Canvas scaling** — Slide canvases always render at full export resolution. A CSS `transform: scale()` shrinks them for the preview.
+
+**3D export** — WebGL content is captured via `canvas.toDataURL()` before `html-to-image` runs, then composited onto the DOM PNG at the correct pixel position.
+
+**Project format** — Screenshots are stored as real PNG files inside the ZIP (not base64 in JSON).
 
 ## License
 

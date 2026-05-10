@@ -1,7 +1,17 @@
 import { useTranslation } from 'react-i18next'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import { framesForFormat, frameById } from '../../data/frames'
+
+const RESIZABLE_FORMATS = new Set(['phone', 'iphone-69', 'iphone-65', 'ipad-13', 'tablet-7', 'tablet-10'])
+const LANDSCAPE_FORMATS = new Set(['tablet-7', 'tablet-10'])
+const PORTRAIT_PHONE_FORMATS = new Set(['phone', 'iphone-69', 'iphone-65', 'ipad-13'])
+
+const DEFAULT_OFFSET: Record<string, number> = {
+  'phone': 30, 'iphone-69': 30, 'iphone-65': 30, 'ipad-13': 30,
+  'tablet-7': 16, 'tablet-10': 16,
+}
+
 
 export function FramePanel() {
   const { t } = useTranslation()
@@ -40,6 +50,61 @@ export function FramePanel() {
           )}
         </button>
       ))}
+      {RESIZABLE_FORMATS.has(slide.format) && (
+        <>
+          <div className="flex items-center gap-2 pt-2 pr-1">
+            <span className="text-xs text-muted w-7 flex-shrink-0">Pos</span>
+            <input
+              type="range" min={-30} max={30} value={slide.deviceOffset ?? 0}
+              onChange={(e) => updateSlide(activeSlideId, { deviceOffset: Number(e.target.value) })}
+              className="flex-1 min-w-0"
+            />
+            <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{(slide.deviceOffset ?? 0) > 0 ? `+${slide.deviceOffset}` : (slide.deviceOffset ?? 0)}%</span>
+            {PORTRAIT_PHONE_FORMATS.has(slide.format) && (
+              <button
+                onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
+                className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+                title="Center vertically"
+              >
+                <AlignCenterVertical size={14} />
+              </button>
+            )}
+            {LANDSCAPE_FORMATS.has(slide.format) && (
+              <button
+                onClick={() => updateSlide(activeSlideId, { deviceOffset: 0 })}
+                className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+                title="Center horizontally"
+              >
+                <AlignCenterHorizontal size={14} />
+              </button>
+            )}
+            <button
+              onClick={() => updateSlide(activeSlideId, { deviceOffset: DEFAULT_OFFSET[slide.format] ?? 0 })}
+              className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+              title="Reset to default position"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 pr-1">
+            <span className="text-xs text-muted w-7 flex-shrink-0">Size</span>
+            <input
+              type="range" min={60} max={100} value={slide.deviceScale ?? 100}
+              onChange={(e) => updateSlide(activeSlideId, { deviceScale: Number(e.target.value) })}
+              className="flex-1 min-w-0"
+            />
+            <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{slide.deviceScale ?? 100}%</span>
+            <button
+              onClick={() => updateSlide(activeSlideId, { deviceScale: 100 })}
+              className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+              title="Reset size"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+        </>
+      )}
+
       {activeFrame.tilt && (
         <div className="flex items-center gap-2 pt-2 pr-1">
           <span className="text-xs text-muted w-7 flex-shrink-0">{t('frame.tilt')}</span>

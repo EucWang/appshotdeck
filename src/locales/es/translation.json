@@ -1,0 +1,71 @@
+{
+  "header": {
+    "tagline": "Capturas para Play Store y App Store",
+    "save": "Guardar",
+    "load": "Cargar",
+    "export_all": "Exportar PNGs",
+    "dark_mode": "Cambiar a modo oscuro",
+    "light_mode": "Cambiar a modo claro"
+  },
+  "sidebar": {
+    "format": "Formato",
+    "platform_android": "Play Store",
+    "platform_ios": "App Store",
+    "formats": {
+      "phone": "Teléfono",
+      "tablet_7": "Tablet 7\"",
+      "tablet_10": "Tablet 10\"",
+      "iphone_69": "iPhone 6.9\"",
+      "iphone_65": "iPhone 6.5\"",
+      "ipad_13": "iPad 13\""
+    },
+    "tabs": {
+      "upload": "Subir",
+      "frame": "Marco",
+      "background": "Fondo",
+      "text": "Texto"
+    }
+  },
+  "upload": {
+    "drop_title": "Arrastra tu captura aquí",
+    "drop_subtitle": "o haz clic para buscar",
+    "compressing": "Comprimiendo…",
+    "hint": "PNG, JPG, WebP · comprimido automáticamente a <900 KB"
+  },
+  "frame": {
+    "title": "Marco de dispositivo",
+    "active": "Activo",
+    "tilt": "Inclinación"
+  },
+  "background": {
+    "gradients": "Degradados",
+    "solids": "Sólidos",
+    "custom": "Personalizado",
+    "solid": "Sólido",
+    "gradient": "Degradado",
+    "from": "Desde",
+    "to": "Hasta",
+    "angle": "Ángulo"
+  },
+  "text": {
+    "headline": "Título",
+    "subtitle": "Subtítulo",
+    "headline_color": "Color del título",
+    "subtitle_color": "Color del subtítulo",
+    "position": "Posición del texto",
+    "position_top": "Arriba",
+    "position_bottom": "Abajo",
+    "headline_placeholder": "Título principal…",
+    "subtitle_placeholder": "Texto de apoyo…"
+  },
+  "strip": {
+    "duplicate": "Duplicar",
+    "remove": "Eliminar"
+  },
+  "canvas": {
+    "upload_prompt": "Sube una captura"
+  },
+  "export": {
+    "slide": "Exportar esta captura PNG"
+  }
+}

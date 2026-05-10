@@ -1,0 +1,71 @@
+{
+  "header": {
+    "tagline": "Play Store & App Store screenshots",
+    "save": "Save",
+    "load": "Load",
+    "export_all": "Export PNGs",
+    "dark_mode": "Switch to dark mode",
+    "light_mode": "Switch to light mode"
+  },
+  "sidebar": {
+    "format": "Format",
+    "platform_android": "Play Store",
+    "platform_ios": "App Store",
+    "formats": {
+      "phone": "Phone",
+      "tablet_7": "Tab 7\"",
+      "tablet_10": "Tab 10\"",
+      "iphone_69": "iPhone 6.9\"",
+      "iphone_65": "iPhone 6.5\"",
+      "ipad_13": "iPad 13\""
+    },
+    "tabs": {
+      "upload": "Upload",
+      "frame": "Frame",
+      "background": "BG",
+      "text": "Text"
+    }
+  },
+  "upload": {
+    "drop_title": "Drop screenshot here",
+    "drop_subtitle": "or click to browse",
+    "compressing": "Compressing…",
+    "hint": "PNG, JPG, WebP · auto-compressed to <900 KB"
+  },
+  "frame": {
+    "title": "Device Frame",
+    "active": "Active",
+    "tilt": "Tilt"
+  },
+  "background": {
+    "gradients": "Gradients",
+    "solids": "Solids",
+    "custom": "Custom",
+    "solid": "Solid",
+    "gradient": "Gradient",
+    "from": "From",
+    "to": "To",
+    "angle": "Angle"
+  },
+  "text": {
+    "headline": "Headline",
+    "subtitle": "Subtitle",
+    "headline_color": "Headline Color",
+    "subtitle_color": "Subtitle Color",
+    "position": "Text Position",
+    "position_top": "Top",
+    "position_bottom": "Bottom",
+    "headline_placeholder": "Main headline…",
+    "subtitle_placeholder": "Supporting text…"
+  },
+  "strip": {
+    "duplicate": "Duplicate",
+    "remove": "Remove"
+  },
+  "canvas": {
+    "upload_prompt": "Upload Screenshot"
+  },
+  "export": {
+    "slide": "Export this slide PNG"
+  }
+}

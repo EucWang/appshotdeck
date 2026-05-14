@@ -2,6 +2,7 @@ import { forwardRef } from 'react'
 import type { CSSProperties } from 'react'
 import type { Slide, SlideFormat } from '../../types'
 import { frameById } from '../../data/frames'
+import { resolveFontFamily } from '../../utils/fonts'
 import { Device3D } from './Device3D'
 import { ScreenContent } from './ScreenContent'
 
@@ -70,8 +71,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const slotY = (landscape ? slotY_landscape : slotY_portrait) + (landscape ? 0 : offsetPx)
 
     // Relative font sizing — scales with canvas width for all formats
-    const headlineSize = Math.round(W * (landscape ? 0.036 : 0.063))
-    const subtitleSize = Math.round(W * (landscape ? 0.022 : 0.039))
+    const headlineSize = slide.headlineFontSize ?? Math.round(W * (landscape ? 0.036 : 0.063))
+    const subtitleSize = slide.subtitleFontSize ?? Math.round(W * (landscape ? 0.022 : 0.039))
+
+    const textFont = resolveFontFamily(slide.textFontFamily)
+    const headlineWeight = slide.headlineFontWeight ?? 700
+    const subtitleWeight = slide.subtitleFontWeight ?? 400
+    const headlineItalic = slide.headlineItalic ?? false
+    const subtitleItalic = slide.subtitleItalic ?? false
 
     return (
       <div
@@ -103,12 +110,12 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: 700, lineHeight: 1.2, marginBottom: 24, color: slide.textColor }}>
+              <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.2, marginBottom: 24, color: slide.textColor, fontFamily: textFont }}>
                 {slide.headline}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: 400, lineHeight: 1.5, color: slide.subtitleColor }}>
+              <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.5, color: slide.subtitleColor, fontFamily: textFont }}>
                 {slide.subtitle}
               </div>
             )}
@@ -127,12 +134,12 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: 700, lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor }}>
+              <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor, fontFamily: textFont }}>
                 {slide.headline}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: 400, lineHeight: 1.45, color: slide.subtitleColor }}>
+              <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.45, color: slide.subtitleColor, fontFamily: textFont }}>
                 {slide.subtitle}
               </div>
             )}

@@ -21,6 +21,8 @@ export type Background =
   | { type: 'solid'; color: string }
   | { type: 'gradient'; from: string; to: string; angle: number }
 
+export type TextFont = string
+
 export type TextPosition = 'top' | 'bottom'
 
 export interface Slide {
@@ -39,6 +41,13 @@ export interface Slide {
   deviceScale: number
   showHeadline: boolean
   showSubtitle: boolean
+  headlineFontSize?: number
+  subtitleFontSize?: number
+  textFontFamily?: TextFont
+  headlineFontWeight?: number
+  subtitleFontWeight?: number
+  headlineItalic?: boolean
+  subtitleItalic?: boolean
 }
 
 export interface EditorState {

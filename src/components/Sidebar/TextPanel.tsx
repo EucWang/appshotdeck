@@ -1,15 +1,162 @@
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, RotateCcw } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
+import { getSystemFonts, isFreeCommercial } from '../../utils/fonts'
+import type { SlideFormat } from '../../types'
+
+const CANVAS_W: Record<SlideFormat, number> = {
+  phone: 1080, 'tablet-7': 1920, 'tablet-10': 2560,
+  'iphone-69': 1320, 'iphone-65': 1242, 'ipad-13': 2048,
+}
+const LANDSCAPE = new Set<SlideFormat>(['tablet-7', 'tablet-10'])
+
+function defaultHeadlineSize(fmt: SlideFormat) {
+  return Math.round(CANVAS_W[fmt] * (LANDSCAPE.has(fmt) ? 0.036 : 0.063))
+}
+function defaultSubtitleSize(fmt: SlideFormat) {
+  return Math.round(CANVAS_W[fmt] * (LANDSCAPE.has(fmt) ? 0.022 : 0.039))
+}
+
+const SELECT_CLASS = "w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-indigo-400 transition-colors"
+const OPT_STYLE = { background: 'white', color: '#111' }
+
+const WEIGHT_ROW1 = [
+  { value: 300, key: 'text.weight_300' },
+  { value: 400, key: 'text.weight_400' },
+  { value: 500, key: 'text.weight_500' },
+  { value: 700, key: 'text.weight_700' },
+]
+const WEIGHT_ROW2 = [
+  { value: 800, key: 'text.weight_800' },
+  { value: 900, key: 'text.weight_900' },
+]
+
+function WeightItalicControls({
+  activeWeight,
+  activeItalic,
+  onWeightChange,
+  onItalicChange,
+  t,
+}: {
+  activeWeight: number
+  activeItalic: boolean
+  onWeightChange: (w: number) => void
+  onItalicChange: (i: boolean) => void
+  t: (key: string) => string
+}) {
+  const btnClass = (active: boolean) =>
+    `flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
+      active
+        ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-400'
+        : 'option-idle border'
+    }`
+
+  return (
+    <div className="space-y-1.5">
+      <span className="text-xs text-muted">{t('text.weight')}</span>
+      <div className="flex gap-1.5">
+        {WEIGHT_ROW1.map((w) => (
+          <button
+            key={w.value}
+            onClick={() => onWeightChange(w.value)}
+            className={btnClass(activeWeight === w.value)}
+            style={{ fontWeight: w.value }}
+          >
+            {t(w.key)}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-1.5">
+        {WEIGHT_ROW2.map((w) => (
+          <button
+            key={w.value}
+            onClick={() => onWeightChange(w.value)}
+            className={btnClass(activeWeight === w.value)}
+            style={{ fontWeight: w.value }}
+          >
+            {t(w.key)}
+          </button>
+        ))}
+        <button
+          onClick={() => onItalicChange(!activeItalic)}
+          className={btnClass(activeItalic)}
+          style={{ fontStyle: 'italic', flex: '1.5' }}
+        >
+          I
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function TextPanel() {
   const { t } = useTranslation()
   const { slides, activeSlideId, updateSlide } = useEditorStore()
+  const [systemFonts, setSystemFonts] = useState<string[] | null | undefined>(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+    getSystemFonts().then((fonts) => {
+      if (!cancelled) setSystemFonts(fonts)
+    })
+    return () => { cancelled = true }
+  }, [])
+
   const slide = slides.find((s) => s.id === activeSlideId)
   if (!slide) return null
 
+  const hSize = slide.headlineFontSize ?? defaultHeadlineSize(slide.format)
+  const sSize = slide.subtitleFontSize ?? defaultSubtitleSize(slide.format)
+  const activeFont = slide.textFontFamily ?? 'default'
+
+  const renderFontPicker = () => {
+    if (systemFonts === null) {
+      return (
+        <div className="flex gap-2">
+          {(['default', 'system'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => updateSlide(activeSlideId, { textFontFamily: f })}
+              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                activeFont === f
+                  ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-400'
+                  : 'option-idle border'
+              }`}
+            >
+              {t(`text.font_${f}`)}
+            </button>
+          ))}
+        </div>
+      )
+    }
+
+    return (
+      <select
+        value={activeFont}
+        onChange={(e) => updateSlide(activeSlideId, { textFontFamily: e.target.value })}
+        className={SELECT_CLASS}
+      >
+        <option style={OPT_STYLE} value="default">{t('text.font_default')}</option>
+        <option style={OPT_STYLE} value="system">{t('text.font_system')}</option>
+        {systemFonts && systemFonts.length > 0 && (
+          <option style={OPT_STYLE} disabled>──────────</option>
+        )}
+        {systemFonts?.map((name) => {
+          const label = isFreeCommercial(name) ? `${name} \u2713` : name
+          return <option style={OPT_STYLE} key={name} value={name}>{label}</option>
+        })}
+      </select>
+    )
+  }
+
   return (
     <div className="p-4 space-y-4">
+      <div className="space-y-2">
+        <label className="text-xs text-muted uppercase tracking-wider">{t('text.font')}</label>
+        {renderFontPicker()}
+      </div>
+
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <label className="text-xs text-muted uppercase tracking-wider">{t('text.headline')}</label>
@@ -27,6 +174,29 @@ export function TextPanel() {
           rows={2}
           className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-black/30 dark:placeholder-white/30 resize-none focus:outline-none focus:border-indigo-400 transition-colors"
           placeholder={t('text.headline_placeholder')}
+        />
+        <div className="flex items-center gap-2 pt-1">
+          <span className="text-xs text-muted w-7 flex-shrink-0">Size</span>
+          <input
+            type="range" min={10} max={400} value={hSize}
+            onChange={(e) => updateSlide(activeSlideId, { headlineFontSize: Number(e.target.value) })}
+            className="flex-1 min-w-0"
+          />
+          <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{hSize}px</span>
+          <button
+            onClick={() => updateSlide(activeSlideId, { headlineFontSize: undefined })}
+            className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+            title="Reset to default size"
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
+        <WeightItalicControls
+          activeWeight={slide.headlineFontWeight ?? 700}
+          activeItalic={slide.headlineItalic ?? false}
+          onWeightChange={(w) => updateSlide(activeSlideId, { headlineFontWeight: w })}
+          onItalicChange={(i) => updateSlide(activeSlideId, { headlineItalic: i })}
+          t={t}
         />
       </div>
 
@@ -47,6 +217,29 @@ export function TextPanel() {
           rows={2}
           className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-black/30 dark:placeholder-white/30 resize-none focus:outline-none focus:border-indigo-400 transition-colors"
           placeholder={t('text.subtitle_placeholder')}
+        />
+        <div className="flex items-center gap-2 pt-1">
+          <span className="text-xs text-muted w-7 flex-shrink-0">Size</span>
+          <input
+            type="range" min={10} max={400} value={sSize}
+            onChange={(e) => updateSlide(activeSlideId, { subtitleFontSize: Number(e.target.value) })}
+            className="flex-1 min-w-0"
+          />
+          <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{sSize}px</span>
+          <button
+            onClick={() => updateSlide(activeSlideId, { subtitleFontSize: undefined })}
+            className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+            title="Reset to default size"
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
+        <WeightItalicControls
+          activeWeight={slide.subtitleFontWeight ?? 400}
+          activeItalic={slide.subtitleItalic ?? false}
+          onWeightChange={(w) => updateSlide(activeSlideId, { subtitleFontWeight: w })}
+          onItalicChange={(i) => updateSlide(activeSlideId, { subtitleItalic: i })}
+          t={t}
         />
       </div>
 

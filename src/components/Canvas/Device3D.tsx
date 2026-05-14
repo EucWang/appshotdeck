@@ -23,6 +23,7 @@ function SizeEnforcer({ w, h }: { w: number; h: number }) {
     if (el.width !== Math.round(w * dpr) || el.height !== Math.round(h * dpr)) {
       gl.setSize(w, h, true)
       if (camera instanceof THREE.PerspectiveCamera) {
+        // eslint-disable-next-line react-hooks/immutability -- Three.js camera objects are mutable by design
         camera.aspect = w / h
         camera.updateProjectionMatrix()
       }

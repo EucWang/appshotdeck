@@ -67,7 +67,13 @@
     "position_top": "Arriba",
     "position_bottom": "Abajo",
     "headline_placeholder": "Título principal…",
-    "subtitle_placeholder": "Texto de apoyo…"
+    "subtitle_placeholder": "Texto de apoyo…",
+    "highlight_color": "Resaltado",
+    "apply_highlight": "Aplicar",
+    "clear_highlight": "Limpiar",
+    "clear_all_highlights": "Todo",
+    "highlight_applied": "✓ Aplicado",
+    "select_text_hint": "Selecciona texto primero"
   },
   "strip": {
     "duplicate": "Duplicar",

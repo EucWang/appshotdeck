@@ -29,6 +29,10 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   deviceScale: 100,
   showHeadline: true,
   showSubtitle: true,
+  headlineSpans: [],
+  subtitleSpans: [],
+  headlineHighlightColor: '#FFD700',
+  subtitleHighlightColor: '#FFD700',
 })
 
 export const useEditorStore = create<EditorState>()(

@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import type { Slide, SlideFormat } from '../../types'
 import { frameById } from '../../data/frames'
 import { resolveFontFamily } from '../../utils/fonts'
+import { renderColoredText } from '../../utils/richtext'
 import { Device3D } from './Device3D'
 import { ScreenContent } from './ScreenContent'
 
@@ -111,12 +112,12 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           >
             {(slide.showHeadline ?? true) && slide.headline && (
               <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.2, marginBottom: 24, color: slide.textColor, fontFamily: textFont }}>
-                {slide.headline}
+                {renderColoredText(slide.headline, slide.headlineSpans)}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
               <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.5, color: slide.subtitleColor, fontFamily: textFont }}>
-                {slide.subtitle}
+                {renderColoredText(slide.subtitle, slide.subtitleSpans)}
               </div>
             )}
           </div>
@@ -135,12 +136,12 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           >
             {(slide.showHeadline ?? true) && slide.headline && (
               <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor, fontFamily: textFont }}>
-                {slide.headline}
+                {renderColoredText(slide.headline, slide.headlineSpans)}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
               <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.45, color: slide.subtitleColor, fontFamily: textFont }}>
-                {slide.subtitle}
+                {renderColoredText(slide.subtitle, slide.subtitleSpans)}
               </div>
             )}
           </div>

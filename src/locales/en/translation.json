@@ -67,7 +67,13 @@
     "position_top": "Top",
     "position_bottom": "Bottom",
     "headline_placeholder": "Main headline…",
-    "subtitle_placeholder": "Supporting text…"
+    "subtitle_placeholder": "Supporting text…",
+    "highlight_color": "Highlight",
+    "apply_highlight": "Apply",
+    "clear_highlight": "Clear",
+    "clear_all_highlights": "All",
+    "highlight_applied": "✓ Applied",
+    "select_text_hint": "Select text first"
   },
   "strip": {
     "duplicate": "Duplicate",

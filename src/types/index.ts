@@ -25,6 +25,12 @@ export type TextFont = string
 
 export type TextPosition = 'top' | 'bottom'
 
+export interface TextSpan {
+  start: number
+  end: number
+  color: string
+}
+
 export interface Slide {
   id: string
   format: SlideFormat
@@ -48,6 +54,10 @@ export interface Slide {
   subtitleFontWeight?: number
   headlineItalic?: boolean
   subtitleItalic?: boolean
+  headlineSpans?: TextSpan[]
+  subtitleSpans?: TextSpan[]
+  headlineHighlightColor?: string
+  subtitleHighlightColor?: string
 }
 
 export interface EditorState {

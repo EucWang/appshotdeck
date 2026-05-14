@@ -66,7 +66,8 @@ src/
 ├── utils/
 │   ├── compress.ts           # Image compression: max 2048px, JPEG quality 0.88→0.3, ~900KB cap
 │   ├── export.ts             # Single slide export or batch ZIP export with WebGL compositing
-│   └── project.ts            # Save/load project as ZIP (config.json + images/*.png)
+│   ├── project.ts            # Save/load project as ZIP (config.json + images/*.png)
+│   └── richtext.tsx          # TextSpan rendering: renderColoredText, applySpan, clearSpanRange, adjustSpansOnTextChange
 │
 └── locales/
     ├── en/translation.json   # English strings
@@ -83,7 +84,7 @@ src/
 - `defaultSlide(format)` creates a new slide with format-appropriate defaults
 - **Always use `?? defaultValue` fallbacks** when reading new fields — old persisted slides lack newer properties
 
-Key Slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl`, `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`
+Key Slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl`, `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`, `headlineSpans`, `subtitleSpans`, `headlineHighlightColor`, `subtitleHighlightColor`
 
 ### Frame System (`src/data/frames.ts`)
 
@@ -149,10 +150,13 @@ Two frame types, distinguished by `device3d` on `FrameDef`:
 
 ## Code Review Checklist
 
-每次执行审核任务时，必须逐项检查以下 5 项：
+每次执行审核任务时，必须逐项检查以下 8 项：
 
 1. **代码修改是否正确？** — 语法、类型、import、拼写无误；变更范围与目标一致，无遗漏文件
 2. **逻辑是否正确？** — 数据流、状态更新、边界条件、fallback 值、向后兼容性均正确；不会产生死代码或不可达分支
 3. **是否会引发其他问题？会不会导致崩溃？** — 不会引入空指针、未定义属性访问、运行时异常；不会破坏已有功能（持久化数据兼容、导出、3D 渲染等）
 4. **是否会有性能问题？** — 不会在 render 路径中引入不必要的计算、re-render、内存泄漏或大量对象创建
 5. **UI 改动是否符合当前项目中的 UI 样式和主题？** — 新增控件必须与已有组件保持一致的 Tailwind class 模式、间距、字号、颜色变量（`text-muted`/`text-dim`/`border-subtle` 等）、图标尺寸（lucide `size={14}`）、布局结构
+6. **改动是否涉及交互逻辑修改，交互逻辑和视觉反馈是怎样的？** — 描述交互流程：用户操作步骤 → 系统响应 → 视觉反馈。确保每个操作都有明确的反馈（成功/失败/禁用状态）。无反馈的静默操作必须标注原因
+7. **交互逻辑是否符合正常的网页设计交互规范？** — 按钮状态（disabled/enabled）随上下文变化、焦点管理（preventDefault 防失焦）、键盘可达性、操作可逆性（undo/clear）。禁止静默失败，用户误操作必须有提示或引导
+8. **交互逻辑是否符合常见的设计规则？** — 符合 Nielsen 可用性原则：系统状态可见性、用户控制与自由、错误预防、一致性。Affordance（可发现性）：功能入口是否直观可发现。反馈及时性：操作后 1 秒内可见结果

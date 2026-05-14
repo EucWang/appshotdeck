@@ -80,7 +80,7 @@ export async function getSystemFonts(): Promise<string[] | null> {
     return null
   }
   try {
-    const fonts: Array<{ family: string }> = await (window as any).queryLocalFonts()
+    const fonts: Array<{ family: string }> = await (window as unknown as { queryLocalFonts: () => Promise<Array<{ family: string }>> }).queryLocalFonts()
     const names = [...new Set(fonts.map((f) => f.family))]
     names.sort((a, b) => a.localeCompare(b))
     cachedFonts = names

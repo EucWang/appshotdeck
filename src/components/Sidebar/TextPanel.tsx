@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, RotateCcw } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import { getSystemFonts, isFreeCommercial } from '../../utils/fonts'
-import type { SlideFormat } from '../../types'
+import { renderColoredText, applySpan, clearSpanRange, adjustSpansOnTextChange } from '../../utils/richtext'
+import type { SlideFormat, TextSpan } from '../../types'
 
 const CANVAS_W: Record<SlideFormat, number> = {
   phone: 1080, 'tablet-7': 1920, 'tablet-10': 2560,
@@ -90,6 +91,112 @@ function WeightItalicControls({
   )
 }
 
+interface HighlightControlsProps {
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
+  text: string
+  spans: TextSpan[]
+  highlightColor: string
+  onHighlightColorChange: (color: string) => void
+  onSpansChange: (spans: TextSpan[]) => void
+  t: (key: string) => string
+}
+
+function HighlightControls({
+  textareaRef,
+  text,
+  spans,
+  highlightColor,
+  onHighlightColorChange,
+  onSpansChange,
+  t,
+}: HighlightControlsProps) {
+  const [selState, setSelState] = useState(false)
+  const [feedback, setFeedback] = useState<string | null>(null)
+
+  const refreshSelection = useCallback(() => {
+    const ta = textareaRef.current
+    if (ta && ta.selectionStart !== ta.selectionEnd) {
+      setSelState(true)
+    } else {
+      setSelState(false)
+    }
+  }, [textareaRef])
+
+  const handleApply = useCallback(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    if (start === end) return
+    const newSpans = applySpan(spans, { start, end, color: highlightColor })
+    onSpansChange(newSpans)
+    setFeedback('applied')
+    setTimeout(() => setFeedback(null), 1000)
+  }, [textareaRef, spans, highlightColor, onSpansChange])
+
+  const handleClear = useCallback(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    if (start === end) return
+    onSpansChange(clearSpanRange(spans, start, end))
+  }, [textareaRef, spans, onSpansChange])
+
+  const handleClearAll = useCallback(() => {
+    onSpansChange([])
+  }, [onSpansChange])
+
+  const hasSpans = spans.length > 0
+
+  const btnBase = "px-2.5 py-1 rounded-md text-xs font-medium transition-all"
+  const btnIdle = `${btnBase} option-idle border`
+  const btnActive = `${btnBase} bg-indigo-500/30 text-indigo-300 border border-indigo-400`
+  const btnDisabled = `${btnBase} option-idle border opacity-40 pointer-events-none`
+
+  return (
+    <div className="space-y-1.5" onMouseEnter={refreshSelection}>
+      <span className="text-xs text-muted">{t('text.highlight_color')}</span>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={highlightColor}
+          onChange={(e) => onHighlightColorChange(e.target.value)}
+          className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent flex-shrink-0"
+        />
+        <div className="flex items-center gap-1 flex-1">
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleApply}
+            className={feedback === 'applied' ? btnActive : selState ? btnActive : btnDisabled}
+          >
+            {feedback === 'applied' ? t('text.highlight_applied') : t('text.apply_highlight')}
+          </button>
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleClear}
+            className={selState && hasSpans ? btnIdle : btnDisabled}
+          >
+            {t('text.clear_highlight')}
+          </button>
+          <button
+            onClick={handleClearAll}
+            className={hasSpans ? btnIdle : btnDisabled}
+          >
+            {t('text.clear_all_highlights')}
+          </button>
+        </div>
+      </div>
+      <div
+        className="text-xs leading-relaxed break-words min-h-[1.25rem]"
+        style={{ color: '#888' }}
+      >
+        {text ? renderColoredText(text, spans.length > 0 ? spans : undefined) : ''}
+      </div>
+    </div>
+  )
+}
+
 export function TextPanel() {
   const { t } = useTranslation()
   const { slides, activeSlideId, updateSlide } = useEditorStore()
@@ -102,6 +209,9 @@ export function TextPanel() {
     })
     return () => { cancelled = true }
   }, [])
+
+  const headlineRef = useRef<HTMLTextAreaElement>(null)
+  const subtitleRef = useRef<HTMLTextAreaElement>(null)
 
   const slide = slides.find((s) => s.id === activeSlideId)
   if (!slide) return null
@@ -169,8 +279,13 @@ export function TextPanel() {
           </button>
         </div>
         <textarea
+          ref={headlineRef}
           value={slide.headline}
-          onChange={(e) => updateSlide(activeSlideId, { headline: e.target.value })}
+          onChange={(e) => {
+            const newText = e.target.value
+            const adjusted = adjustSpansOnTextChange(slide.headline, newText, slide.headlineSpans ?? [])
+            updateSlide(activeSlideId, { headline: newText, headlineSpans: adjusted })
+          }}
           rows={2}
           className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-black/30 dark:placeholder-white/30 resize-none focus:outline-none focus:border-indigo-400 transition-colors"
           placeholder={t('text.headline_placeholder')}
@@ -198,6 +313,15 @@ export function TextPanel() {
           onItalicChange={(i) => updateSlide(activeSlideId, { headlineItalic: i })}
           t={t}
         />
+        <HighlightControls
+          textareaRef={headlineRef}
+          text={slide.headline}
+          spans={slide.headlineSpans ?? []}
+          highlightColor={slide.headlineHighlightColor ?? '#FFD700'}
+          onHighlightColorChange={(c) => updateSlide(activeSlideId, { headlineHighlightColor: c })}
+          onSpansChange={(s) => updateSlide(activeSlideId, { headlineSpans: s })}
+          t={t}
+        />
       </div>
 
       <div className="space-y-1">
@@ -212,8 +336,13 @@ export function TextPanel() {
           </button>
         </div>
         <textarea
+          ref={subtitleRef}
           value={slide.subtitle}
-          onChange={(e) => updateSlide(activeSlideId, { subtitle: e.target.value })}
+          onChange={(e) => {
+            const newText = e.target.value
+            const adjusted = adjustSpansOnTextChange(slide.subtitle, newText, slide.subtitleSpans ?? [])
+            updateSlide(activeSlideId, { subtitle: newText, subtitleSpans: adjusted })
+          }}
           rows={2}
           className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-black/30 dark:placeholder-white/30 resize-none focus:outline-none focus:border-indigo-400 transition-colors"
           placeholder={t('text.subtitle_placeholder')}
@@ -239,6 +368,15 @@ export function TextPanel() {
           activeItalic={slide.subtitleItalic ?? false}
           onWeightChange={(w) => updateSlide(activeSlideId, { subtitleFontWeight: w })}
           onItalicChange={(i) => updateSlide(activeSlideId, { subtitleItalic: i })}
+          t={t}
+        />
+        <HighlightControls
+          textareaRef={subtitleRef}
+          text={slide.subtitle}
+          spans={slide.subtitleSpans ?? []}
+          highlightColor={slide.subtitleHighlightColor ?? '#FFD700'}
+          onHighlightColorChange={(c) => updateSlide(activeSlideId, { subtitleHighlightColor: c })}
+          onSpansChange={(s) => updateSlide(activeSlideId, { subtitleSpans: s })}
           t={t}
         />
       </div>

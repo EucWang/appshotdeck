@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { EditorState, FrameId, Slide, SlideFormat } from '../types'
+import type { DeviceSlot, EditorState, FrameId, ScreenshotSlot, Slide, SlideFormat } from '../types'
+import { defaultDualPresetId, presetById } from '../data/layoutPresets'
 
 export function defaultFrameForFormat(format: SlideFormat): FrameId {
   switch (format) {
@@ -33,7 +34,61 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   subtitleSpans: [],
   headlineHighlightColor: '#FFD700',
   subtitleHighlightColor: '#FFD700',
+  screenshotCount: 1,
 })
+
+export function screenshotSlotFromSlide(slide: Slide): ScreenshotSlot {
+  return {
+    screenshotDataUrl: slide.screenshotDataUrl ?? null,
+    screenshotZoom: slide.screenshotZoom ?? 100,
+    screenshotOffsetX: slide.screenshotOffsetX ?? 0,
+    screenshotOffsetY: slide.screenshotOffsetY ?? 0,
+  }
+}
+
+export function deviceSlotFromSlide(slide: Slide): DeviceSlot {
+  return {
+    deviceOffset: slide.deviceOffset,
+    deviceScale: slide.deviceScale,
+    deviceRotate: slide.deviceRotate ?? 0,
+  }
+}
+
+function emptyScreenshotSlot(): ScreenshotSlot {
+  return { screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 }
+}
+
+function switchToDual(slide: Slide): Partial<Slide> {
+  const preset = presetById(defaultDualPresetId)!
+  return {
+    screenshotCount: 2,
+    slots: [screenshotSlotFromSlide(slide), emptyScreenshotSlot()],
+    deviceSlots: [preset.devices[0], preset.devices[1]],
+    activePresetId: defaultDualPresetId,
+  }
+}
+
+function switchToSingle(slide: Slide): Partial<Slide> {
+  const slot0 = slide.slots?.[0]
+  const dev0 = slide.deviceSlots?.[0]
+  return {
+    screenshotCount: 1,
+    screenshotDataUrl: slot0?.screenshotDataUrl ?? slide.screenshotDataUrl,
+    screenshotZoom: slot0?.screenshotZoom ?? slide.screenshotZoom,
+    screenshotOffsetX: slot0?.screenshotOffsetX ?? slide.screenshotOffsetX,
+    screenshotOffsetY: slot0?.screenshotOffsetY ?? slide.screenshotOffsetY,
+    deviceOffset: dev0?.deviceOffset ?? slide.deviceOffset,
+    deviceScale: dev0?.deviceScale ?? slide.deviceScale,
+    deviceRotate: dev0?.deviceRotate ?? slide.deviceRotate,
+    activePresetId: null,
+  }
+}
+
+export function toggleScreenshotCount(slide: Slide, count: 1 | 2): Partial<Slide> {
+  if (count === 2 && (slide.screenshotCount ?? 1) !== 2) return switchToDual(slide)
+  if (count === 1 && (slide.screenshotCount ?? 1) !== 1) return switchToSingle(slide)
+  return {}
+}
 
 export const useEditorStore = create<EditorState>()(
   persist(
@@ -52,7 +107,12 @@ export const useEditorStore = create<EditorState>()(
         set((s) => {
           const src = s.slides.find((sl) => sl.id === id)
           if (!src) return s
-          const copy = { ...src, id: crypto.randomUUID() }
+          const copy = {
+            ...src,
+            id: crypto.randomUUID(),
+            slots: src.slots ? src.slots.map((sl) => ({ ...sl })) : undefined,
+            deviceSlots: src.deviceSlots ? src.deviceSlots.map((ds) => ({ ...ds })) : undefined,
+          }
           const idx = s.slides.findIndex((sl) => sl.id === id)
           const slides = [...s.slides]
           slides.splice(idx + 1, 0, copy)

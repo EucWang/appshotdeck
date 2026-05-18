@@ -30,7 +30,9 @@
     "drop_title": "Drop screenshot here",
     "drop_subtitle": "or click to browse",
     "compressing": "Compressing…",
-    "hint": "PNG, JPG, WebP · auto-compressed to <900 KB"
+    "hint": "PNG, JPG, WebP · auto-compressed to <900 KB",
+    "screenshot_1": "Screenshot 1",
+    "screenshot_2": "Screenshot 2"
   },
   "frame": {
     "title": "Device Frame",
@@ -39,7 +41,11 @@
     "tilt": "Tilt",
     "zoom": "Zoom",
     "zoom_reset": "Reset zoom & pan",
-    "zoom_hint": "Scroll to zoom \u00b7 drag to pan"
+    "zoom_hint": "Scroll to zoom \u00b7 drag to pan",
+    "screens": "Screens",
+    "presets": "Layout Presets",
+    "device_1": "Device 1",
+    "device_2": "Device 2"
   },
   "background": {
     "gradients": "Gradients",

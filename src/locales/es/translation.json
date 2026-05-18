@@ -30,7 +30,9 @@
     "drop_title": "Arrastra tu captura aquí",
     "drop_subtitle": "o haz clic para buscar",
     "compressing": "Comprimiendo…",
-    "hint": "PNG, JPG, WebP · comprimido automáticamente a <900 KB"
+    "hint": "PNG, JPG, WebP · comprimido automáticamente a <900 KB",
+    "screenshot_1": "Captura 1",
+    "screenshot_2": "Captura 2"
   },
   "frame": {
     "title": "Marco de dispositivo",
@@ -39,7 +41,11 @@
     "tilt": "Inclinaci\u00f3n",
     "zoom": "Zoom",
     "zoom_reset": "Restablecer zoom y posici\u00f3n",
-    "zoom_hint": "Scroll para zoom \u00b7 arrastra para mover"
+    "zoom_hint": "Scroll para zoom \u00b7 arrastra para mover",
+    "screens": "Pantallas",
+    "presets": "Diseños predefinidos",
+    "device_1": "Dispositivo 1",
+    "device_2": "Dispositivo 2"
   },
   "background": {
     "gradients": "Degradados",

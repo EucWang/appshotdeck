@@ -33,6 +33,26 @@ export interface TextSpan {
   color: string
 }
 
+export interface ScreenshotSlot {
+  screenshotDataUrl: string | null
+  screenshotZoom: number
+  screenshotOffsetX: number
+  screenshotOffsetY: number
+}
+
+export interface DeviceSlot {
+  deviceOffset: number
+  deviceOffsetX?: number
+  deviceScale: number
+  deviceRotate: number
+}
+
+export interface LayoutPresetDef {
+  id: string
+  screenshotCount: 1 | 2
+  devices: DeviceSlot[]
+}
+
 export interface Slide {
   id: string
   format: SlideFormat
@@ -65,6 +85,10 @@ export interface Slide {
   screenshotOffsetX?: number
   screenshotOffsetY?: number
   textOffsetY?: number
+  screenshotCount?: 1 | 2
+  slots?: ScreenshotSlot[]
+  deviceSlots?: DeviceSlot[]
+  activePresetId?: string | null
 }
 
 export interface EditorState {

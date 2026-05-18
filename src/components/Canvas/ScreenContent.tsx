@@ -11,6 +11,7 @@ interface Props {
   screenshotZoom: number
   screenshotOffsetX: number
   screenshotOffsetY: number
+  slotIndex?: number
 }
 
 function clampPan(v: number, max: number) {
@@ -26,6 +27,7 @@ export function ScreenContent({
   screenshotZoom,
   screenshotOffsetX,
   screenshotOffsetY,
+  slotIndex,
 }: Props) {
   const { t } = useTranslation()
   const [isDragging, setIsDragging] = useState(false)
@@ -36,27 +38,47 @@ export function ScreenContent({
   const panXPx = (screenshotOffsetX / 100) * slotW
   const panYPx = (screenshotOffsetY / 100) * slotH
 
+  const slotIdx = slotIndex ?? 0
+
   useEffect(() => {
     if (!interactive || !imgRef.current) return
     const el = imgRef.current
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const sl = useEditorStore.getState().slides.find((s) => s.id === slideId)
-      const curZoom = sl?.screenshotZoom ?? 100
-      const curOX = sl?.screenshotOffsetX ?? 0
-      const curOY = sl?.screenshotOffsetY ?? 0
-      const step = e.deltaY > 0 ? -10 : 10
-      const newZoom = Math.max(100, Math.min(400, curZoom + step))
-      const newMax = Math.max(0, (newZoom / 100 - 1) * 50)
-      useEditorStore.getState().updateSlide(slideId, {
-        screenshotZoom: newZoom,
-        screenshotOffsetX: clampPan(curOX, newMax),
-        screenshotOffsetY: clampPan(curOY, newMax),
-      })
+      if (!sl) return
+
+      if (sl.screenshotCount === 2 && sl.slots) {
+        const curSlot = sl.slots[slotIdx]
+        if (!curSlot) return
+        const step = e.deltaY > 0 ? -10 : 10
+        const newZoom = Math.max(100, Math.min(400, curSlot.screenshotZoom + step))
+        const newMax = Math.max(0, (newZoom / 100 - 1) * 50)
+        const newSlots = [...sl.slots]
+        newSlots[slotIdx] = {
+          ...curSlot,
+          screenshotZoom: newZoom,
+          screenshotOffsetX: clampPan(curSlot.screenshotOffsetX, newMax),
+          screenshotOffsetY: clampPan(curSlot.screenshotOffsetY, newMax),
+        }
+        useEditorStore.getState().updateSlide(slideId, { slots: newSlots })
+      } else {
+        const curZoom = sl.screenshotZoom ?? 100
+        const curOX = sl.screenshotOffsetX ?? 0
+        const curOY = sl.screenshotOffsetY ?? 0
+        const step = e.deltaY > 0 ? -10 : 10
+        const newZoom = Math.max(100, Math.min(400, curZoom + step))
+        const newMax = Math.max(0, (newZoom / 100 - 1) * 50)
+        useEditorStore.getState().updateSlide(slideId, {
+          screenshotZoom: newZoom,
+          screenshotOffsetX: clampPan(curOX, newMax),
+          screenshotOffsetY: clampPan(curOY, newMax),
+        })
+      }
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
-  }, [interactive, slideId])
+  }, [interactive, slideId, slotIdx])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -64,24 +86,46 @@ export function ScreenContent({
       e.preventDefault()
       setIsDragging(true)
       const sl = useEditorStore.getState().slides.find((s) => s.id === slideId)
-      dragState.current = {
-        startX: e.clientX,
-        startY: e.clientY,
-        startOffsetX: sl?.screenshotOffsetX ?? 0,
-        startOffsetY: sl?.screenshotOffsetY ?? 0,
+
+      let startOX = 0
+      let startOY = 0
+      if (sl && sl.screenshotCount === 2 && sl.slots) {
+        startOX = sl.slots[slotIdx]?.screenshotOffsetX ?? 0
+        startOY = sl.slots[slotIdx]?.screenshotOffsetY ?? 0
+      } else if (sl) {
+        startOX = sl.screenshotOffsetX ?? 0
+        startOY = sl.screenshotOffsetY ?? 0
       }
+
+      dragState.current = { startX: e.clientX, startY: e.clientY, startOffsetX: startOX, startOffsetY: startOY }
       const onMove = (ev: MouseEvent) => {
         const rect = imgRef.current?.parentElement?.getBoundingClientRect()
         if (!rect) return
         const dx = ((ev.clientX - dragState.current.startX) / rect.width) * 100
         const dy = ((ev.clientY - dragState.current.startY) / rect.height) * 100
         const curSl = useEditorStore.getState().slides.find((s) => s.id === slideId)
-        const curZoom = curSl?.screenshotZoom ?? 100
-        const curMax = Math.max(0, (curZoom / 100 - 1) * 50)
-        useEditorStore.getState().updateSlide(slideId, {
-          screenshotOffsetX: clampPan(dragState.current.startOffsetX + dx, curMax),
-          screenshotOffsetY: clampPan(dragState.current.startOffsetY + dy, curMax),
-        })
+        if (!curSl) return
+
+        if (curSl.screenshotCount === 2 && curSl.slots) {
+          const curSlot = curSl.slots[slotIdx]
+          if (!curSlot) return
+          const curZoom = curSlot.screenshotZoom
+          const curMax = Math.max(0, (curZoom / 100 - 1) * 50)
+          const newSlots = [...curSl.slots]
+          newSlots[slotIdx] = {
+            ...curSlot,
+            screenshotOffsetX: clampPan(dragState.current.startOffsetX + dx, curMax),
+            screenshotOffsetY: clampPan(dragState.current.startOffsetY + dy, curMax),
+          }
+          useEditorStore.getState().updateSlide(slideId, { slots: newSlots })
+        } else {
+          const curZoom = curSl.screenshotZoom ?? 100
+          const curMax = Math.max(0, (curZoom / 100 - 1) * 50)
+          useEditorStore.getState().updateSlide(slideId, {
+            screenshotOffsetX: clampPan(dragState.current.startOffsetX + dx, curMax),
+            screenshotOffsetY: clampPan(dragState.current.startOffsetY + dy, curMax),
+          })
+        }
       }
       const onUp = () => {
         setIsDragging(false)
@@ -91,7 +135,7 @@ export function ScreenContent({
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     },
-    [slideId, zoomFactor],
+    [slideId, zoomFactor, slotIdx],
   )
 
   const handleTouchStart = useCallback(
@@ -99,12 +143,18 @@ export function ScreenContent({
       if (zoomFactor <= 1 || e.touches.length !== 1) return
       const touch = e.touches[0]
       const sl = useEditorStore.getState().slides.find((s) => s.id === slideId)
-      dragState.current = {
-        startX: touch.clientX,
-        startY: touch.clientY,
-        startOffsetX: sl?.screenshotOffsetX ?? 0,
-        startOffsetY: sl?.screenshotOffsetY ?? 0,
+
+      let startOX = 0
+      let startOY = 0
+      if (sl && sl.screenshotCount === 2 && sl.slots) {
+        startOX = sl.slots[slotIdx]?.screenshotOffsetX ?? 0
+        startOY = sl.slots[slotIdx]?.screenshotOffsetY ?? 0
+      } else if (sl) {
+        startOX = sl.screenshotOffsetX ?? 0
+        startOY = sl.screenshotOffsetY ?? 0
       }
+
+      dragState.current = { startX: touch.clientX, startY: touch.clientY, startOffsetX: startOX, startOffsetY: startOY }
       const onMove = (ev: TouchEvent) => {
         ev.preventDefault()
         const t = ev.touches[0]
@@ -113,12 +163,28 @@ export function ScreenContent({
         const dx = ((t.clientX - dragState.current.startX) / rect.width) * 100
         const dy = ((t.clientY - dragState.current.startY) / rect.height) * 100
         const curSl = useEditorStore.getState().slides.find((s) => s.id === slideId)
-        const curZoom = curSl?.screenshotZoom ?? 100
-        const curMax = Math.max(0, (curZoom / 100 - 1) * 50)
-        useEditorStore.getState().updateSlide(slideId, {
-          screenshotOffsetX: clampPan(dragState.current.startOffsetX + dx, curMax),
-          screenshotOffsetY: clampPan(dragState.current.startOffsetY + dy, curMax),
-        })
+        if (!curSl) return
+
+        if (curSl.screenshotCount === 2 && curSl.slots) {
+          const curSlot = curSl.slots[slotIdx]
+          if (!curSlot) return
+          const curZoom = curSlot.screenshotZoom
+          const curMax = Math.max(0, (curZoom / 100 - 1) * 50)
+          const newSlots = [...curSl.slots]
+          newSlots[slotIdx] = {
+            ...curSlot,
+            screenshotOffsetX: clampPan(dragState.current.startOffsetX + dx, curMax),
+            screenshotOffsetY: clampPan(dragState.current.startOffsetY + dy, curMax),
+          }
+          useEditorStore.getState().updateSlide(slideId, { slots: newSlots })
+        } else {
+          const curZoom = curSl.screenshotZoom ?? 100
+          const curMax = Math.max(0, (curZoom / 100 - 1) * 50)
+          useEditorStore.getState().updateSlide(slideId, {
+            screenshotOffsetX: clampPan(dragState.current.startOffsetX + dx, curMax),
+            screenshotOffsetY: clampPan(dragState.current.startOffsetY + dy, curMax),
+          })
+        }
       }
       const onEnd = () => {
         window.removeEventListener('touchmove', onMove)
@@ -127,7 +193,7 @@ export function ScreenContent({
       window.addEventListener('touchmove', onMove, { passive: false })
       window.addEventListener('touchend', onEnd)
     },
-    [slideId, zoomFactor],
+    [slideId, zoomFactor, slotIdx],
   )
 
   if (!screenshotDataUrl) {

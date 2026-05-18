@@ -1,21 +1,34 @@
 import JSZip from 'jszip'
-import type { Background, Slide } from '../types'
+import type { Background, ScreenshotSlot, Slide } from '../types'
 
-const PROJECT_VERSION = 1
+const PROJECT_VERSION = 2
 
 type JsonBackground =
   | { type: 'solid'; color: string }
   | { type: 'gradient'; from: string; to: string; angle: number }
   | { type: 'image'; dataUrl: string; overlayColor: string; overlayOpacity: number; blur: number; frosted: number }
 
-interface SlideEntry extends Omit<Slide, 'screenshotDataUrl' | 'background'> {
+type JsonScreenshotSlot = Omit<ScreenshotSlot, 'screenshotDataUrl'> & {
+  image: string | null
+}
+
+interface SlideEntry extends Omit<Slide, 'screenshotDataUrl' | 'background' | 'slots'> {
   image: string | null
   background: JsonBackground
+  jsonSlots?: JsonScreenshotSlot[]
 }
 
 interface ProjectConfig {
   version: number
   slides: SlideEntry[]
+}
+
+function slotToImageBase64(slot: ScreenshotSlot): { slot: JsonScreenshotSlot; base64: string | null; filename: string } | null {
+  if (!slot.screenshotDataUrl) {
+    return { slot: { image: null, screenshotZoom: slot.screenshotZoom, screenshotOffsetX: slot.screenshotOffsetX, screenshotOffsetY: slot.screenshotOffsetY }, base64: null, filename: '' }
+  }
+  const base64 = slot.screenshotDataUrl.split(',')[1]
+  return { slot: { image: '', screenshotZoom: slot.screenshotZoom, screenshotOffsetX: slot.screenshotOffsetX, screenshotOffsetY: slot.screenshotOffsetY }, base64, filename: '' }
 }
 
 export async function saveProject(slides: Slide[]): Promise<void> {
@@ -24,7 +37,7 @@ export async function saveProject(slides: Slide[]): Promise<void> {
 
   const configSlides: SlideEntry[] = await Promise.all(
     slides.map(async (slide, idx) => {
-      const { screenshotDataUrl, background, ...rest } = slide
+      const { screenshotDataUrl, background, slots, ...rest } = slide
       let image: string | null = null
 
       if (screenshotDataUrl) {
@@ -42,7 +55,20 @@ export async function saveProject(slides: Slide[]): Promise<void> {
         jsonBg = { ...background, dataUrl: `images/${bgFilename}` }
       }
 
-      return { ...rest, image, background: jsonBg } as unknown as SlideEntry
+      let jsonSlots: JsonScreenshotSlot[] | undefined
+      if (slots) {
+        jsonSlots = slots.map((s, sIdx) => {
+          const result = slotToImageBase64(s)
+          if (result && result.base64) {
+            const filename = `slide-${idx + 1}-slot${sIdx + 1}.png`
+            images.file(filename, result.base64, { base64: true })
+            return { ...result.slot, image: `images/${filename}` }
+          }
+          return { ...result!.slot }
+        })
+      }
+
+      return { ...rest, image, background: jsonBg, jsonSlots } as unknown as SlideEntry
     }),
   )
 
@@ -62,6 +88,13 @@ export interface LoadedProject {
   slides: Slide[]
 }
 
+async function loadImageFromZip(zip: JSZip, imagePath: string): Promise<string | null> {
+  const imgFile = zip.file(imagePath)
+  if (!imgFile) return null
+  const base64 = await imgFile.async('base64')
+  return `data:image/png;base64,${base64}`
+}
+
 export async function loadProject(file: File): Promise<LoadedProject> {
   const zip = await JSZip.loadAsync(file)
 
@@ -78,11 +111,7 @@ export async function loadProject(file: File): Promise<LoadedProject> {
       let screenshotDataUrl: string | null = null
 
       if (entry.image) {
-        const imgFile = zip.file(entry.image)
-        if (imgFile) {
-          const base64 = await imgFile.async('base64')
-          screenshotDataUrl = `data:image/png;base64,${base64}`
-        }
+        screenshotDataUrl = await loadImageFromZip(zip, entry.image)
       }
 
       let background: Background = entry.background
@@ -106,7 +135,29 @@ export async function loadProject(file: File): Promise<LoadedProject> {
 
       const rest = { ...entry } as Record<string, unknown>
       delete rest.image
-      return { ...rest, screenshotDataUrl, background } as unknown as Slide
+      delete rest.jsonSlots
+
+      const slide: Record<string, unknown> = { ...rest, screenshotDataUrl, background }
+
+      if (entry.jsonSlots) {
+        const loadedSlots: ScreenshotSlot[] = await Promise.all(
+          entry.jsonSlots.map(async (js) => {
+            let dataUrl: string | null = null
+            if (js.image) {
+              dataUrl = await loadImageFromZip(zip, js.image)
+            }
+            return {
+              screenshotDataUrl: dataUrl,
+              screenshotZoom: js.screenshotZoom,
+              screenshotOffsetX: js.screenshotOffsetX,
+              screenshotOffsetY: js.screenshotOffsetY,
+            }
+          }),
+        )
+        slide.slots = loadedSlots
+      }
+
+      return slide as unknown as Slide
     }),
   )
 

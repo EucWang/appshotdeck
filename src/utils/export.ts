@@ -32,39 +32,42 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 async function captureElement(el: HTMLElement, format: SlideFormat): Promise<string> {
   const { width, height } = FORMAT_SIZE[format]
 
-  // Check for a WebGL canvas (3D frames). Must be captured before html-to-image
-  // because html-to-image cannot read WebGL content — it renders the canvas as blank.
-  const webglCanvas = el.querySelector('canvas') as HTMLCanvasElement | null
+  const webglCanvases = el.querySelectorAll('canvas') as NodeListOf<HTMLCanvasElement>
 
-  if (!webglCanvas) {
+  if (webglCanvases.length === 0) {
     return toPng(el, { width, height, pixelRatio: 1 })
   }
 
-  // Grab WebGL frame while the buffer is still live (preserveDrawingBuffer: true)
-  const webglDataUrl = webglCanvas.toDataURL('image/png')
+  const slideRect = el.getBoundingClientRect()
+  const scaleX = slideRect.width / width
+  const scaleY = slideRect.height / height
 
-  // Compute the WebGL canvas position in the slide's full-res coordinate space.
-  // The slide element has transform:scale(s), so divide bounding rects by that scale.
-  const slideRect  = el.getBoundingClientRect()
-  const webglRect  = webglCanvas.getBoundingClientRect()
-  const scaleX     = slideRect.width  / width
-  const scaleY     = slideRect.height / height
-  const webglX     = (webglRect.left - slideRect.left) / scaleX
-  const webglY     = (webglRect.top  - slideRect.top)  / scaleY
-  const webglW     = webglRect.width  / scaleX
-  const webglH     = webglRect.height / scaleY
+  const webglLayers: { dataUrl: string; x: number; y: number; w: number; h: number }[] = []
+  for (const canvas of webglCanvases) {
+    const dataUrl = canvas.toDataURL('image/png')
+    const rect = canvas.getBoundingClientRect()
+    webglLayers.push({
+      dataUrl,
+      x: (rect.left - slideRect.left) / scaleX,
+      y: (rect.top - slideRect.top) / scaleY,
+      w: rect.width / scaleX,
+      h: rect.height / scaleY,
+    })
+  }
 
-  // Capture DOM layer (WebGL area will be transparent/blank here)
   const domDataUrl = await toPng(el, { width, height, pixelRatio: 1 })
 
-  // Composite: DOM background + WebGL frame on top
-  const composite  = document.createElement('canvas')
-  composite.width  = width
+  const composite = document.createElement('canvas')
+  composite.width = width
   composite.height = height
   const ctx = composite.getContext('2d')!
-  const [domImg, webglImg] = await Promise.all([loadImage(domDataUrl), loadImage(webglDataUrl)])
-  ctx.drawImage(domImg,   0, 0, width, height)
-  ctx.drawImage(webglImg, webglX, webglY, webglW, webglH)
+  const domImg = await loadImage(domDataUrl)
+  ctx.drawImage(domImg, 0, 0, width, height)
+
+  for (const layer of webglLayers) {
+    const img = await loadImage(layer.dataUrl)
+    ctx.drawImage(img, layer.x, layer.y, layer.w, layer.h)
+  }
 
   return composite.toDataURL('image/png')
 }

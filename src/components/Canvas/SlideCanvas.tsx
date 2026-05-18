@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import type { Slide, SlideFormat } from '../../types'
+import type { DeviceSlot, Slide, SlideFormat } from '../../types'
 import { frameById } from '../../data/frames'
 import { resolveFontFamily } from '../../utils/fonts'
 import { renderColoredText } from '../../utils/richtext'
@@ -17,17 +17,13 @@ interface FormatConfig {
   slotW: number
   slotH: number
   landscape: boolean
-  /** ViewBox dimensions used to scale frame outerRx and bezel width to slot pixels */
   frameViewBox: string
 }
 
 const FORMAT: Record<SlideFormat, FormatConfig> = {
-  // Android / Play Store — portrait
   phone:     { W: 1080, H: 1920, slotW: 780,  slotH: 1686, landscape: false, frameViewBox: '0 0 390 844' },
-  // Android tablets — landscape
   'tablet-7':  { W: 1920, H: 1080, slotW: 425,  slotH: 918,  landscape: true,  frameViewBox: '0 0 390 844' },
   'tablet-10': { W: 2560, H: 1440, slotW: 566,  slotH: 1224, landscape: true,  frameViewBox: '0 0 390 844' },
-  // iOS / App Store — portrait
   'iphone-69': { W: 1320, H: 2868, slotW: 990,  slotH: 2148, landscape: false, frameViewBox: '0 0 393 852' },
   'iphone-65': { W: 1242, H: 2688, slotW: 930,  slotH: 2020, landscape: false, frameViewBox: '0 0 393 852' },
   'ipad-13':   { W: 2048, H: 2732, slotW: 1440, slotH: 1897, landscape: false, frameViewBox: '0 0 820 1080' },
@@ -35,7 +31,6 @@ const FORMAT: Record<SlideFormat, FormatConfig> = {
 
 let _noiseDataUrl: string | null = null
 
-// browser-only: uses document.createElement('canvas')
 function getNoiseDataUrl(): string {
   if (_noiseDataUrl) return _noiseDataUrl
   const size = 100
@@ -99,50 +94,145 @@ function BackgroundLayers({ bg }: { bg: Slide['background'] }) {
   )
 }
 
+function DeviceFrame({
+  slide,
+  fmt,
+  slotIndex,
+  interactive,
+}: {
+  slide: Slide
+  fmt: FormatConfig
+  slotIndex: number
+  interactive: boolean
+}) {
+  const { W, H, slotW, slotH, landscape, frameViewBox } = fmt
+  const frame = frameById(slide.frame)
+
+  const isDual = (slide.screenshotCount ?? 1) === 2
+  let devSlot: DeviceSlot
+  let screenshotDataUrl: string | null
+  let screenshotZoom: number
+  let screenshotOffsetX: number
+  let screenshotOffsetY: number
+
+  if (isDual) {
+    devSlot = slide.deviceSlots?.[slotIndex] ?? { deviceOffset: 0, deviceScale: 78, deviceRotate: 0 }
+    const sSlot = slide.slots?.[slotIndex]
+    screenshotDataUrl = sSlot?.screenshotDataUrl ?? null
+    screenshotZoom = sSlot?.screenshotZoom ?? 100
+    screenshotOffsetX = sSlot?.screenshotOffsetX ?? 0
+    screenshotOffsetY = sSlot?.screenshotOffsetY ?? 0
+  } else {
+    devSlot = {
+      deviceOffset: slide.deviceOffset,
+      deviceScale: slide.deviceScale,
+      deviceRotate: slide.deviceRotate ?? 0,
+    }
+    screenshotDataUrl = slide.screenshotDataUrl
+    screenshotZoom = slide.screenshotZoom ?? 100
+    screenshotOffsetX = slide.screenshotOffsetX ?? 0
+    screenshotOffsetY = slide.screenshotOffsetY ?? 0
+  }
+
+  const deviceScaleFactor = devSlot.deviceScale / 100
+  const dSlotW = Math.round(slotW * deviceScaleFactor)
+  const dSlotH = Math.round(slotH * deviceScaleFactor)
+
+  const vbW = Number(frameViewBox.split(' ')[2])
+  const screenshotRadius = frame.outerRx != null
+    ? Math.round(frame.outerRx * dSlotW / vbW)
+    : undefined
+  const bezelWidth = frame.bezel != null
+    ? Math.round(frame.bezel.width * dSlotW / vbW)
+    : undefined
+
+  const slotX_center = Math.round((W - dSlotW) / 2)
+  const slotY_center = Math.round((H - dSlotH) / 2)
+
+  const offsetPx = Math.round((landscape ? W : H) * (devSlot.deviceOffset / 100))
+  const offsetXPx = Math.round((landscape ? H : W) * ((devSlot.deviceOffsetX ?? 0) / 100))
+  const slotX = slotX_center + (landscape ? offsetPx : offsetXPx)
+  const slotY = slotY_center + (landscape ? offsetXPx : offsetPx)
+
+  const screenContentProps = {
+    screenshotDataUrl,
+    slotW: dSlotW,
+    slotH: dSlotH,
+    interactive,
+    slideId: slide.id,
+    screenshotZoom,
+    screenshotOffsetX,
+    screenshotOffsetY,
+    slotIndex,
+  }
+
+  return (
+    <div
+      style={{
+        position: 'absolute', left: slotX, top: slotY, width: dSlotW, height: dSlotH,
+        ...(frame.device3d ? {} : {
+          transform: devSlot.deviceRotate !== 0 ? `rotate(${devSlot.deviceRotate}deg)` : undefined,
+          transformOrigin: 'center center',
+        }),
+      }}
+    >
+      {slide.frame === 'tablet-none' ? (
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <ScreenContent {...screenContentProps} />
+        </div>
+      ) : frame.device3d ? (
+        <Device3D
+          spec={frame.device3d}
+          slotW={dSlotW}
+          slotH={dSlotH}
+          vbW={vbW}
+          tilt={slide.frameTilt}
+          rotate={devSlot.deviceRotate}
+          screenshotDataUrl={screenshotDataUrl}
+        />
+      ) : (
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          {frame.bezel ? (
+            <div style={{
+              position: 'absolute', inset: 0,
+              borderRadius: screenshotRadius,
+              background: frame.bezel.color,
+              overflow: 'hidden',
+              boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
+            }}>
+              <div style={{
+                position: 'absolute',
+                inset: bezelWidth,
+                borderRadius: Math.max(0, (screenshotRadius ?? 0) - (bezelWidth ?? 0)),
+                overflow: 'hidden',
+              }}>
+                <ScreenContent {...screenContentProps} />
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              position: 'absolute', inset: 0,
+              borderRadius: screenshotRadius,
+              overflow: 'hidden',
+              boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
+            }}>
+              <ScreenContent {...screenContentProps} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
   ({ slide, scale = 1 }, ref) => {
     const fmt = FORMAT[slide.format]
-    const { W, H, slotW, slotH, landscape, frameViewBox } = fmt
-    const frame = frameById(slide.frame)
+    const { W, H, landscape } = fmt
 
-    // Apply device scale (portrait only; tablets keep their fixed layout)
-    const deviceScaleFactor = (slide.deviceScale ?? 100) / 100
-    const dSlotW = Math.round(slotW * deviceScaleFactor)
-    const dSlotH = Math.round(slotH * deviceScaleFactor)
+    const isDual = (slide.screenshotCount ?? 1) === 2
+    const interactive = scale !== 1
 
-    // Compute pixel values scaled from viewBox units to (scaled) slot pixels
-    const vbW = Number(frameViewBox.split(' ')[2])
-    const screenshotRadius = frame.outerRx != null
-      ? Math.round(frame.outerRx * dSlotW / vbW)
-      : undefined
-    const bezelWidth = frame.bezel != null
-      ? Math.round(frame.bezel.width * dSlotW / vbW)
-      : undefined
-
-    // ── Portrait layout (phone / iPhone / iPad) ───────────────────────────
-    const slotX_portrait = Math.round((W - dSlotW) / 2)
-    const slotY_portrait = Math.round((H - dSlotH) / 2)
-
-    // ── Landscape layout (Android tablets) ───────────────────────────────
-    const slotX_landscape = Math.round((W - dSlotW) / 2)
-    const slotY_landscape = Math.round((H - dSlotH) / 2)
-
-    const offsetPx = Math.round((landscape ? W : H) * ((slide.deviceOffset ?? 0) / 100))
-    const slotX = (landscape ? slotX_landscape : slotX_portrait) + (landscape ? offsetPx : 0)
-    const slotY = (landscape ? slotY_landscape : slotY_portrait) + (landscape ? 0 : offsetPx)
-
-    const screenContentProps = {
-      screenshotDataUrl: slide.screenshotDataUrl,
-      slotW: dSlotW,
-      slotH: dSlotH,
-      interactive: scale !== 1,
-      slideId: slide.id,
-      screenshotZoom: slide.screenshotZoom ?? 100,
-      screenshotOffsetX: slide.screenshotOffsetX ?? 0,
-      screenshotOffsetY: slide.screenshotOffsetY ?? 0,
-    }
-
-    // Relative font sizing — scales with canvas width for all formats
     const headlineSize = slide.headlineFontSize ?? Math.round(W * (landscape ? 0.036 : 0.063))
     const subtitleSize = slide.subtitleFontSize ?? Math.round(W * (landscape ? 0.022 : 0.039))
 
@@ -152,6 +242,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const headlineItalic = slide.headlineItalic ?? false
     const subtitleItalic = slide.subtitleItalic ?? false
     const textOffsetPx = Math.round(H * ((slide.textOffsetY ?? 0) / 100))
+
+    const devSlot0 = isDual
+      ? (slide.deviceSlots?.[0] ?? { deviceOffset: 0, deviceScale: 78, deviceRotate: 0 })
+      : { deviceOffset: slide.deviceOffset, deviceScale: slide.deviceScale, deviceRotate: slide.deviceRotate ?? 0 }
+    const deviceScaleFactor0 = devSlot0.deviceScale / 100
+    const dSlotH0 = Math.round(fmt.slotH * deviceScaleFactor0)
+    const offsetPx0 = Math.round((landscape ? W : H) * (devSlot0.deviceOffset / 100))
+    const slotY0 = Math.round((H - dSlotH0) / 2) + (landscape ? 0 : offsetPx0)
 
     return (
       <div
@@ -167,9 +265,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
         }}
       >
         <BackgroundLayers bg={slide.background} />
-        {/* ── Text ──────────────────────────────────────────────────────── */}
         {landscape ? (
-          // Tablet: left column, vertically centered, left-aligned
           <div
             style={{
               position: 'absolute',
@@ -194,7 +290,6 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
             )}
           </div>
         ) : (
-          // Portrait: top or bottom
           <div
             style={{
               position: 'absolute',
@@ -202,7 +297,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               right: Math.round(W * 0.07),
               top: slide.textPosition === 'top'
                 ? Math.round(H * 0.055) + textOffsetPx
-                : slotY + dSlotH + Math.round(H * 0.03) + textOffsetPx,
+                : slotY0 + dSlotH0 + Math.round(H * 0.03) + textOffsetPx,
               textAlign: 'center',
             }}
           >
@@ -219,68 +314,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           </div>
         )}
 
-        {/* ── Device slot ───────────────────────────────────────────────── */}
-        <div
-          style={{
-            position: 'absolute', left: slotX, top: slotY, width: dSlotW, height: dSlotH,
-            ...(frame.device3d ? {} : {
-              transform: (slide.deviceRotate ?? 0) !== 0 ? `rotate(${slide.deviceRotate}deg)` : undefined,
-              transformOrigin: 'center center',
-            }),
-          }}
-        >
-          {slide.frame === 'tablet-none' ? (
-            <div style={{
-              position: 'relative', width: '100%', height: '100%',
-            }}>
-              <ScreenContent {...screenContentProps} />
-            </div>
-          ) : frame.device3d ? (
-            <Device3D
-              spec={frame.device3d}
-              slotW={dSlotW}
-              slotH={dSlotH}
-              vbW={vbW}
-              tilt={slide.frameTilt}
-              rotate={slide.deviceRotate ?? 0}
-              screenshotDataUrl={slide.screenshotDataUrl}
-            />
-          ) : (
-            <div
-              style={{
-                position: 'relative', width: '100%', height: '100%',
-              }}
-            >
-              {frame.bezel ? (
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  borderRadius: screenshotRadius,
-                  background: frame.bezel.color,
-                  overflow: 'hidden',
-                  boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    inset: bezelWidth,
-                    borderRadius: Math.max(0, (screenshotRadius ?? 0) - (bezelWidth ?? 0)),
-                    overflow: 'hidden',
-                  }}>
-                    <ScreenContent {...screenContentProps} />
-                  </div>
-                </div>
-              ) : (
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  borderRadius: screenshotRadius,
-                  overflow: 'hidden',
-                  boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
-                }}>
-                  <ScreenContent {...screenContentProps} />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        {isDual ? (
+          <>
+            <DeviceFrame slide={slide} fmt={fmt} slotIndex={0} interactive={interactive} />
+            <DeviceFrame slide={slide} fmt={fmt} slotIndex={1} interactive={interactive} />
+          </>
+        ) : (
+          <DeviceFrame slide={slide} fmt={fmt} slotIndex={0} interactive={interactive} />
+        )}
       </div>
     )
   }

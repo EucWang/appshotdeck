@@ -23,7 +23,8 @@
       "upload": "Subir",
       "frame": "Marco",
       "background": "Fondo",
-      "text": "Texto"
+      "text": "Texto",
+      "style": "Estilo"
     }
   },
   "upload": {
@@ -46,6 +47,33 @@
     "presets": "Diseños predefinidos",
     "device_1": "Dispositivo 1",
     "device_2": "Dispositivo 2"
+  },
+  "style": {
+    "title": "Estilo",
+    "style": "Estilo",
+    "style_default": "Predeterminado",
+    "style_glass_light": "Cristal Claro",
+    "style_glass_dark": "Cristal Oscuro",
+    "style_liquid_glass": "Cristal Líquido",
+    "style_inset_light": "Hundido Claro",
+    "style_inset_dark": "Hundido Oscuro",
+    "style_outline": "Contorno",
+    "style_border": "Borde",
+    "border": "Borde",
+    "border_sharp": "Angular",
+    "border_curved": "Curvo",
+    "border_round": "Redondo",
+    "border_radius": "Radio",
+    "border_width": "Ancho",
+    "border_color": "Color",
+    "shadow": "Sombra",
+    "shadow_none": "Ninguna",
+    "shadow_spread": "Extendida",
+    "shadow_hug": "Cerca",
+    "shadow_adaptive": "Adaptativa",
+    "opacity": "Opacidad",
+    "adjust_light": "Ajustar Luz",
+    "reset": "Restablecer"
   },
   "background": {
     "gradients": "Degradados",
@@ -99,8 +127,5 @@
   },
   "canvas": {
     "upload_prompt": "Sube una captura"
-  },
-  "export": {
-    "slide": "Exportar esta captura PNG"
   }
 }

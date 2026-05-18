@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Device3DSpec } from '../../data/frames'
+import type { ShadowMode } from '../../types'
 
 /** Parse 'rgba(r,g,b,a)' → ['rgb(r,g,b)', a] for Three.js */
 function parseColor(css: string): [string, number] {
@@ -155,9 +156,12 @@ interface Props {
   tilt:   number
   rotate: number
   screenshotDataUrl: string | null
+  mockupOpacity?: number
+  frameLightIntensity?: number
+  shadowMode?: ShadowMode
 }
 
-export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotDataUrl }: Props) {
+export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotDataUrl, mockupOpacity = 100, frameLightIntensity = 100, shadowMode = 'spread' }: Props) {
   const aspect       = slotH / slotW
   const bezelN       = (spec.bezelWidth * (slotW / vbW)) / slotW
   const outerCornerR = spec.outerRx / vbW   // model units — matches android-flat outerRx
@@ -171,9 +175,21 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotData
   const zExcursion = 0.5 * Math.sin(maxTiltRad) + (modelDepth / 2 + modelBevel) * Math.cos(maxTiltRad)
   const cameraZ    = (aspect / 2) / Math.tan((fov / 2) * (Math.PI / 180)) + zExcursion + 0.05
 
+  const lightFactor = frameLightIntensity / 100
+
+  const dropShadow = (() => {
+    switch (shadowMode) {
+      case 'none': return ''
+      case 'spread': return 'drop-shadow(0 48px 80px rgba(0,0,0,0.5))'
+      case 'hug': return 'drop-shadow(0 8px 24px rgba(0,0,0,0.4))'
+      case 'adaptive': return 'drop-shadow(0 24px 60px rgba(0,0,0,0.45))'
+      default: return 'drop-shadow(0 24px 48px rgba(0,0,0,0.75))'
+    }
+  })()
+
   return (
     <Canvas
-      style={{ position: 'absolute', inset: 0, filter: 'drop-shadow(0 24px 48px rgba(0,0,0,0.75))' }}
+      style={{ position: 'absolute', inset: 0, filter: dropShadow, opacity: mockupOpacity / 100 }}
       camera={{ position: [0, 0, cameraZ], fov, near: 0.01, far: 100 }}
       gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
       flat
@@ -183,11 +199,9 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotData
       <SizeEnforcer w={slotW} h={slotH} />
 
       {/* Ambient base so body is never pure black */}
-      <ambientLight intensity={0.4} />
-      {/* Key: upper-right, steep angle so bevel top/right faces catch specular */}
-      <directionalLight position={[2, 8, 1]} intensity={3} />
-      {/* Fill: lower-left-front, soft */}
-      <directionalLight position={[-3, -2, 4]} intensity={0.6} />
+      <ambientLight intensity={0.4 * lightFactor} />
+      <directionalLight position={[2, 8, 1]} intensity={3 * lightFactor} />
+      <directionalLight position={[-3, -2, 4]} intensity={0.6 * lightFactor} />
 
       <PhoneModel
         spec={spec}

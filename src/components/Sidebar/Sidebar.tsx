@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Upload, Smartphone, Image, Type, Monitor } from 'lucide-react'
+import { Upload, Smartphone, Image, Type, Monitor, Palette } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { UploadPanel } from './UploadPanel'
 import { FramePanel } from './FramePanel'
+import { StylePanel } from './StylePanel'
 import { BackgroundPanel } from './BackgroundPanel'
 import { TextPanel } from './TextPanel'
 import { useEditorStore } from '../../store/useEditorStore'
@@ -10,7 +11,7 @@ import { defaultFrameForFormat } from '../../store/useEditorStore'
 import { framesForFormat } from '../../data/frames'
 import type { SlideFormat } from '../../types'
 
-type Tab = 'upload' | 'frame' | 'background' | 'text'
+type Tab = 'upload' | 'frame' | 'style' | 'background' | 'text'
 type Platform = 'android' | 'ios'
 
 export function Sidebar() {
@@ -23,6 +24,7 @@ export function Sidebar() {
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'upload',     label: t('sidebar.tabs.upload'),     icon: <Upload className="w-4 h-4" /> },
     { id: 'frame',      label: t('sidebar.tabs.frame'),      icon: <Smartphone className="w-4 h-4" /> },
+    { id: 'style',      label: t('sidebar.tabs.style'),      icon: <Palette className="w-4 h-4" /> },
     { id: 'background', label: t('sidebar.tabs.background'), icon: <Image className="w-4 h-4" /> },
     { id: 'text',       label: t('sidebar.tabs.text'),       icon: <Type className="w-4 h-4" /> },
   ]
@@ -121,6 +123,7 @@ export function Sidebar() {
       <div className="flex-1 overflow-y-auto">
         {tab === 'upload'     && <UploadPanel />}
         {tab === 'frame'      && <FramePanel />}
+        {tab === 'style'      && <StylePanel />}
         {tab === 'background' && <BackgroundPanel />}
         {tab === 'text'       && <TextPanel />}
       </div>

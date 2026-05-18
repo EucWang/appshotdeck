@@ -5,6 +5,7 @@ import { resolveFontFamily } from '../../utils/fonts'
 import { renderColoredText } from '../../utils/richtext'
 import { Device3D } from './Device3D'
 import { ScreenContent } from './ScreenContent'
+import { computeRadius, computeShadow, computeAdaptiveShadow, getBezelLightColor } from '../../utils/mockupStyle'
 
 interface Props {
   slide: Slide
@@ -94,6 +95,47 @@ function BackgroundLayers({ bg }: { bg: Slide['background'] }) {
   )
 }
 
+function bgBrightness(slide: Slide): number {
+  const bg = slide.background
+  if (bg.type === 'solid') {
+    return colorBrightness(bg.color)
+  }
+  if (bg.type === 'gradient') {
+    return (colorBrightness(bg.from) + colorBrightness(bg.to)) / 2
+  }
+  return 0.3
+}
+
+function colorBrightness(hex: string): number {
+  const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
+  if (!m) return 0.5
+  return (parseInt(m[1], 16) * 0.299 + parseInt(m[2], 16) * 0.587 + parseInt(m[3], 16) * 0.114) / 255
+}
+
+function renderGlassBg(slide: Slide) {
+  const blurAmount = 20
+  const bg = slide.background
+  let bgImage: string | undefined
+  let bgGrad: string | undefined
+  let bgColor: string | undefined
+  if (bg.type === 'solid') bgColor = bg.color
+  else if (bg.type === 'gradient') bgGrad = `linear-gradient(${bg.angle}deg, ${bg.from}, ${bg.to})`
+  else bgImage = bg.dataUrl
+
+  return (
+    <div style={{
+      position: 'absolute',
+      inset: -blurAmount * 3,
+      backgroundColor: bgColor,
+      backgroundImage: bgImage ? `url(${bgImage})` : bgGrad,
+      backgroundSize: bgImage ? 'cover' : undefined,
+      backgroundPosition: bgImage ? 'center' : undefined,
+      filter: `blur(${blurAmount}px)`,
+      transform: 'scale(1.2)',
+    }} />
+  )
+}
+
 function DeviceFrame({
   slide,
   fmt,
@@ -146,6 +188,17 @@ function DeviceFrame({
     ? Math.round(frame.bezel.width * dSlotW / vbW)
     : undefined
 
+  const mockupStyle = slide.mockupStyle ?? 'default'
+  const borderShape = slide.borderShape ?? 'curved'
+  const borderRadiusOverride = slide.borderRadius ?? 20
+  const shadowMode = slide.shadowMode ?? 'spread'
+  const mockupOpacity = slide.mockupOpacity ?? 100
+  const frameLightIntensity = slide.frameLightIntensity ?? 100
+
+  const isGlass = mockupStyle === 'glass-light' || mockupStyle === 'glass-dark' || mockupStyle === 'liquid-glass'
+
+  const computedRadius = computeRadius(borderShape, screenshotRadius, borderRadiusOverride)
+
   const slotX_center = Math.round((W - dSlotW) / 2)
   const slotY_center = Math.round((H - dSlotH) / 2)
 
@@ -189,35 +242,129 @@ function DeviceFrame({
           tilt={slide.frameTilt}
           rotate={devSlot.deviceRotate}
           screenshotDataUrl={screenshotDataUrl}
+          mockupOpacity={slide.mockupOpacity ?? 100}
+          frameLightIntensity={slide.frameLightIntensity ?? 100}
+          shadowMode={slide.shadowMode ?? 'spread'}
         />
       ) : (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           {frame.bezel ? (
-            <div style={{
-              position: 'absolute', inset: 0,
-              borderRadius: screenshotRadius,
-              background: frame.bezel.color,
-              overflow: 'hidden',
-              boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
-            }}>
-              <div style={{
-                position: 'absolute',
-                inset: bezelWidth,
-                borderRadius: Math.max(0, (screenshotRadius ?? 0) - (bezelWidth ?? 0)),
-                overflow: 'hidden',
-              }}>
-                <ScreenContent {...screenContentProps} />
-              </div>
-            </div>
+            (() => {
+              const bezelColor = getBezelLightColor(frame.bezel!.color, frameLightIntensity)
+              const shadowCSS = shadowMode === 'adaptive'
+                ? computeAdaptiveShadow(bgBrightness(slide))
+                : computeShadow(shadowMode)
+
+              if (isGlass) {
+                const glassBg = mockupStyle === 'glass-light' ? 'rgba(255,255,255,0.12)'
+                  : mockupStyle === 'glass-dark' ? 'rgba(0,0,0,0.35)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04))'
+                return (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    borderRadius: computedRadius,
+                    overflow: 'hidden',
+                    ...(shadowCSS ? { boxShadow: shadowCSS } : {}),
+                    opacity: mockupOpacity / 100,
+                  }}>
+                    {renderGlassBg(slide)}
+                    <div style={{
+                      position: 'absolute', inset: bezelWidth,
+                      borderRadius: Math.max(0, (computedRadius ?? 0) - (bezelWidth ?? 0)),
+                      overflow: 'hidden',
+                      background: glassBg,
+                      border: `${slide.borderWidth ?? 2}px solid rgba(255,255,255,${mockupStyle === 'glass-dark' ? '0.12' : '0.3'})`,
+                    }}>
+                      <ScreenContent {...screenContentProps} />
+                    </div>
+                  </div>
+                )
+              }
+
+              const isOutlineLike = mockupStyle === 'outline'
+
+              return (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: computedRadius,
+                  background: isOutlineLike ? 'transparent' : bezelColor,
+                  overflow: 'hidden',
+                  ...(shadowCSS ? { boxShadow: shadowCSS } : {}),
+                  opacity: mockupOpacity / 100,
+                  ...(mockupStyle === 'outline' ? { background: 'transparent', border: `${slide.borderWidth ?? 2}px solid ${slide.borderColor ?? 'rgba(255,255,255,0.4)'}` } : {}),
+                  ...(mockupStyle === 'border' ? { border: `${slide.borderWidth ?? 2}px solid ${slide.borderColor ?? 'rgba(255,255,255,0.4)'}` } : {}),
+                  ...(mockupStyle === 'inset-light' ? { boxShadow: `inset 0 2px 8px rgba(255,255,255,${0.2 * frameLightIntensity / 100}), inset 0 -1px 3px rgba(0,0,0,0.15)${shadowCSS ? ', ' + shadowCSS : ''}` } : {}),
+                  ...(mockupStyle === 'inset-dark' ? { boxShadow: `inset 0 3px 10px rgba(0,0,0,${0.4 * frameLightIntensity / 100})${shadowCSS ? ', ' + shadowCSS : ''}` } : {}),
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    inset: isOutlineLike ? 0 : bezelWidth,
+                    borderRadius: Math.max(0, (computedRadius ?? 0) - (isOutlineLike ? 0 : (bezelWidth ?? 0))),
+                    overflow: 'hidden',
+                  }}>
+                    <ScreenContent {...screenContentProps} />
+                  </div>
+                </div>
+              )
+            })()
           ) : (
-            <div style={{
-              position: 'absolute', inset: 0,
-              borderRadius: screenshotRadius,
-              overflow: 'hidden',
-              boxShadow: '0 48px 80px -24px rgba(0,0,0,0.5)',
-            }}>
-              <ScreenContent {...screenContentProps} />
-            </div>
+            (() => {
+              const shadowCSS = shadowMode === 'adaptive'
+                ? computeAdaptiveShadow(bgBrightness(slide))
+                : computeShadow(shadowMode)
+
+              if (isGlass) {
+                const glassBg = mockupStyle === 'glass-light' ? 'rgba(255,255,255,0.12)'
+                  : mockupStyle === 'glass-dark' ? 'rgba(0,0,0,0.35)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04))'
+                return (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    borderRadius: computedRadius,
+                    overflow: 'hidden',
+                    ...(shadowCSS ? { boxShadow: shadowCSS } : {}),
+                    opacity: mockupOpacity / 100,
+                  }}>
+                    {renderGlassBg(slide)}
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      borderRadius: computedRadius,
+                      overflow: 'hidden',
+                      background: glassBg,
+                      border: `${slide.borderWidth ?? 2}px solid rgba(255,255,255,${mockupStyle === 'glass-dark' ? '0.12' : '0.3'})`,
+                    }}>
+                      <ScreenContent {...screenContentProps} />
+                    </div>
+                  </div>
+                )
+              }
+
+              const extraCSS: React.CSSProperties = {}
+              if (mockupStyle === 'outline') {
+                extraCSS.background = 'transparent'
+                extraCSS.border = `${slide.borderWidth ?? 2}px solid ${slide.borderColor ?? 'rgba(255,255,255,0.4)'}`
+              } else if (mockupStyle === 'border') {
+                extraCSS.border = `${slide.borderWidth ?? 2}px solid ${slide.borderColor ?? 'rgba(255,255,255,0.4)'}`
+              } else if (mockupStyle === 'inset-light') {
+                extraCSS.boxShadow = `inset 0 2px 8px rgba(255,255,255,${0.2 * frameLightIntensity / 100}), inset 0 -1px 3px rgba(0,0,0,0.15)${shadowCSS ? ', ' + shadowCSS : ''}`
+              } else if (mockupStyle === 'inset-dark') {
+                extraCSS.boxShadow = `inset 0 3px 10px rgba(0,0,0,${0.4 * frameLightIntensity / 100})${shadowCSS ? ', ' + shadowCSS : ''}`
+              } else if (shadowCSS) {
+                extraCSS.boxShadow = shadowCSS
+              }
+
+              return (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: computedRadius,
+                  overflow: 'hidden',
+                  opacity: mockupOpacity / 100,
+                  ...extraCSS,
+                }}>
+                  <ScreenContent {...screenContentProps} />
+                </div>
+              )
+            })()
           )}
         </div>
       )}

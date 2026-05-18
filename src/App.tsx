@@ -1,13 +1,10 @@
 import { useRef, useCallback, useEffect } from 'react'
-import { Download } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Header } from './components/Header'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { SlideCanvas } from './components/Canvas/SlideCanvas'
 import { SlideStrip } from './components/SlideStrip'
 import { useEditorStore } from './store/useEditorStore'
 import { useThemeStore } from './store/useThemeStore'
-import { exportSlide } from './utils/export'
 import type { SlideFormat } from './types'
 
 function HiddenExportCanvases({
@@ -60,21 +57,12 @@ export default function App() {
   const canvasRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const { slides, activeSlideId } = useEditorStore()
   const { isDark } = useThemeStore()
-  const { t } = useTranslation()
   const activeSlide = slides.find((s) => s.id === activeSlideId)
 
   // Apply dark class to <html> whenever theme changes
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
   }, [isDark])
-
-  const handleExportCurrent = useCallback(async () => {
-    if (!activeSlide) return
-    const el = canvasRefs.current.get(activeSlideId)
-    if (!el) return
-    const idx = slides.findIndex((s) => s.id === activeSlideId)
-    await exportSlide(el, activeSlide.format, `slide-${idx + 1}`)
-  }, [activeSlide, activeSlideId, slides])
 
   const scale = activeSlide ? previewScale(activeSlide.format) : 1
   const dims  = activeSlide ? FORMAT_DIMS[activeSlide.format] : { W: 1080, H: 1920 }
@@ -107,13 +95,6 @@ export default function App() {
                 <SlideCanvas slide={activeSlide} scale={scale} />
               </div>
 
-              <button
-                onClick={handleExportCurrent}
-                className="flex items-center gap-2 px-4 py-2 text-sm btn-ghost"
-              >
-                <Download className="w-4 h-4" />
-                {t('export.slide')}
-              </button>
             </>
           )}
         </main>

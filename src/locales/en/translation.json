@@ -23,7 +23,8 @@
       "upload": "Upload",
       "frame": "Frame",
       "background": "BG",
-      "text": "Text"
+      "text": "Text",
+      "style": "Style"
     }
   },
   "upload": {
@@ -46,6 +47,33 @@
     "presets": "Layout Presets",
     "device_1": "Device 1",
     "device_2": "Device 2"
+  },
+  "style": {
+    "title": "Style",
+    "style": "Style",
+    "style_default": "Default",
+    "style_glass_light": "Glass Light",
+    "style_glass_dark": "Glass Dark",
+    "style_liquid_glass": "Liquid Glass",
+    "style_inset_light": "Inset Light",
+    "style_inset_dark": "Inset Dark",
+    "style_outline": "Outline",
+    "style_border": "Border",
+    "border": "Border",
+    "border_sharp": "Sharp",
+    "border_curved": "Curved",
+    "border_round": "Round",
+    "border_radius": "Radius",
+    "border_width": "Width",
+    "border_color": "Color",
+    "shadow": "Shadow",
+    "shadow_none": "None",
+    "shadow_spread": "Spread",
+    "shadow_hug": "Hug",
+    "shadow_adaptive": "Adaptive",
+    "opacity": "Opacity",
+    "adjust_light": "Adjust Light",
+    "reset": "Reset"
   },
   "background": {
     "gradients": "Gradients",
@@ -99,8 +127,5 @@
   },
   "canvas": {
     "upload_prompt": "Upload Screenshot"
-  },
-  "export": {
-    "slide": "Export this slide PNG"
   }
 }

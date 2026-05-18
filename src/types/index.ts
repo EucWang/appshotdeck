@@ -27,6 +27,20 @@ export type TextFont = string
 
 export type TextPosition = 'top' | 'bottom'
 
+export type MockupStyle =
+  | 'default'
+  | 'glass-light'
+  | 'glass-dark'
+  | 'liquid-glass'
+  | 'inset-light'
+  | 'inset-dark'
+  | 'outline'
+  | 'border'
+
+export type BorderShape = 'sharp' | 'curved' | 'round'
+
+export type ShadowMode = 'none' | 'spread' | 'hug' | 'adaptive'
+
 export interface TextSpan {
   start: number
   end: number
@@ -89,6 +103,14 @@ export interface Slide {
   slots?: ScreenshotSlot[]
   deviceSlots?: DeviceSlot[]
   activePresetId?: string | null
+  mockupStyle?: MockupStyle
+  borderShape?: BorderShape
+  borderRadius?: number
+  borderWidth?: number
+  borderColor?: string
+  shadowMode?: ShadowMode
+  mockupOpacity?: number
+  frameLightIntensity?: number
 }
 
 export interface EditorState {

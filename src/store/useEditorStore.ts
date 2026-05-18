@@ -35,6 +35,14 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   headlineHighlightColor: '#FFD700',
   subtitleHighlightColor: '#FFD700',
   screenshotCount: 1,
+  mockupStyle: 'default',
+  borderShape: 'curved',
+  borderRadius: 20,
+  borderWidth: 2,
+  borderColor: 'rgba(255,255,255,0.4)',
+  shadowMode: 'spread',
+  mockupOpacity: 100,
+  frameLightIntensity: 100,
 })
 
 export function screenshotSlotFromSlide(slide: Slide): ScreenshotSlot {

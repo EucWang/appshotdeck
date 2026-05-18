@@ -1,8 +1,7 @@
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import { Header } from './components/Header'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { SlideCanvas } from './components/Canvas/SlideCanvas'
-import { SlideStrip } from './components/SlideStrip'
 import { useEditorStore } from './store/useEditorStore'
 import { useThemeStore } from './store/useThemeStore'
 import type { SlideFormat } from './types'
@@ -29,15 +28,6 @@ function HiddenExportCanvases({
   )
 }
 
-const DISPLAY: Record<SlideFormat, { maxW: number; maxH: number }> = {
-  'phone':     { maxW: 340,  maxH: 620 },
-  'tablet-7':  { maxW: 820,  maxH: 490 },
-  'tablet-10': { maxW: 820,  maxH: 490 },
-  'iphone-69': { maxW: 300,  maxH: 620 },
-  'iphone-65': { maxW: 300,  maxH: 620 },
-  'ipad-13':   { maxW: 460,  maxH: 620 },
-}
-
 const FORMAT_DIMS: Record<SlideFormat, { W: number; H: number }> = {
   'phone':     { W: 1080,  H: 1920 },
   'tablet-7':  { W: 1920,  H: 1080 },
@@ -47,24 +37,37 @@ const FORMAT_DIMS: Record<SlideFormat, { W: number; H: number }> = {
   'ipad-13':   { W: 2048,  H: 2732 },
 }
 
-function previewScale(format: SlideFormat) {
-  const { maxW, maxH } = DISPLAY[format]
+function previewScale(format: SlideFormat, availW: number, availH: number) {
   const { W, H } = FORMAT_DIMS[format]
-  return Math.min(maxW / W, maxH / H)
+  return Math.min(availW / W, availH / H)
 }
 
 export default function App() {
   const canvasRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const mainRef = useRef<HTMLElement>(null)
+  const [availDims, setAvailDims] = useState({ w: 600, h: 800 })
   const { slides, activeSlideId } = useEditorStore()
   const { isDark } = useThemeStore()
   const activeSlide = slides.find((s) => s.id === activeSlideId)
 
-  // Apply dark class to <html> whenever theme changes
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
   }, [isDark])
 
-  const scale = activeSlide ? previewScale(activeSlide.format) : 1
+  useEffect(() => {
+    const el = mainRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      setAvailDims({
+        w: entry.contentRect.width,
+        h: entry.contentRect.height,
+      })
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const scale = activeSlide ? previewScale(activeSlide.format, availDims.w, availDims.h) : 1
   const dims  = activeSlide ? FORMAT_DIMS[activeSlide.format] : { W: 1080, H: 1920 }
   const displayW = Math.round(dims.W * scale)
   const displayH = Math.round(dims.H * scale)
@@ -76,7 +79,7 @@ export default function App() {
       <div className="flex flex-1 min-h-0">
         <Sidebar />
 
-        <main className="flex-1 flex flex-col items-center justify-center gap-4 overflow-auto p-6">
+        <main ref={mainRef} className="flex-1 flex flex-col items-center justify-center gap-4 overflow-auto p-6">
           {activeSlide && (
             <>
               <div
@@ -100,7 +103,6 @@ export default function App() {
         </main>
       </div>
 
-      <SlideStrip />
       <HiddenExportCanvases canvasRefs={canvasRefs} />
     </div>
   )

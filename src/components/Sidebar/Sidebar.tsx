@@ -6,6 +6,7 @@ import { FramePanel } from './FramePanel'
 import { StylePanel } from './StylePanel'
 import { BackgroundPanel } from './BackgroundPanel'
 import { TextPanel } from './TextPanel'
+import { SlideStrip } from '../SlideStrip'
 import { useEditorStore } from '../../store/useEditorStore'
 import { defaultFrameForFormat } from '../../store/useEditorStore'
 import { framesForFormat } from '../../data/frames'
@@ -127,6 +128,8 @@ export function Sidebar() {
         {tab === 'background' && <BackgroundPanel />}
         {tab === 'text'       && <TextPanel />}
       </div>
+
+      <SlideStrip />
     </aside>
   )
 }

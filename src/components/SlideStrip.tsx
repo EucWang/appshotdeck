@@ -20,7 +20,7 @@ export function SlideStrip() {
   const [overIdx, setOverIdx] = useState<number | null>(null)
 
   return (
-    <div className="h-28 flex-shrink-0 surface border-t border-subtle flex items-center gap-3 px-4 overflow-x-auto">
+    <div className="flex-shrink-0 surface border-t border-subtle py-3 px-2 flex items-center gap-2 overflow-x-auto">
       {slides.map((slide, idx) => {
         const isActive = slide.id === activeSlideId
         const bg = slide.background
@@ -90,7 +90,7 @@ export function SlideStrip() {
 
       {slides.length < 8 && (
         <button onClick={addSlide}
-          className="flex-shrink-0 w-12 h-20 rounded-lg border-2 border-dashed border-black/20 dark:border-white/20 hover:border-indigo-400 hover:bg-indigo-500/10 flex items-center justify-center transition-all">
+          className="flex-shrink-0 w-10 h-16 rounded-lg border-2 border-dashed border-black/20 dark:border-white/20 hover:border-indigo-400 hover:bg-indigo-500/10 flex items-center justify-center transition-all">
           <Plus className="w-5 h-5 text-muted" />
         </button>
       )}

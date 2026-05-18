@@ -402,6 +402,26 @@ export function TextPanel() {
           <span className="text-sm text-dim font-mono">{slide.subtitleColor}</span>
         </label>
       </div>
+
+      <div className="space-y-2">
+        <label className="text-xs text-muted uppercase tracking-wider">{t('text.y_offset')}</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="range" min={0} max={90} value={slide.textOffsetY ?? 0}
+            onChange={(e) => updateSlide(activeSlideId, { textOffsetY: Number(e.target.value) })}
+            className="flex-1 min-w-0"
+          />
+          <span className="text-xs text-dim font-mono w-10 text-right flex-shrink-0">{slide.textOffsetY ?? 0}%
+          </span>
+          <button
+            onClick={() => updateSlide(activeSlideId, { textOffsetY: 0 })}
+            className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+            title="Reset Y offset"
+          >
+            <RotateCcw size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -148,6 +148,10 @@ Two frame types, distinguished by `device3d` on `FrameDef`:
 - Default device scale: 100
 - Default `showHeadline`/`showSubtitle`: true
 
+## Planning Rules
+
+- 任何方案或计划中不允许出现任何 git 操作（git add、git commit、git push 等）。计划只需描述代码修改和验证步骤，不需要包含提交步骤。
+
 ## Code Review Checklist
 
 每次执行审核任务时，必须逐项检查以下 8 项：

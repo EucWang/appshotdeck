@@ -61,13 +61,14 @@ function roundedRectShape(w: number, h: number, r: number): THREE.Shape {
 interface ModelProps {
   spec:          Device3DSpec
   aspect:        number
-  bezelN:        number   // bezel width in model units
-  outerCornerR:  number   // outer corner radius in model units (= outerRx / vbW)
+  bezelN:        number
+  outerCornerR:  number
   tilt:          number
+  rotate:        number
   screenshotDataUrl: string | null
 }
 
-function PhoneModel({ spec, aspect, bezelN, outerCornerR, tilt, screenshotDataUrl }: ModelProps) {
+function PhoneModel({ spec, aspect, bezelN, outerCornerR, tilt, rotate, screenshotDataUrl }: ModelProps) {
   const W     = 1
   const H     = aspect
   const depth = 0.068
@@ -119,7 +120,7 @@ function PhoneModel({ spec, aspect, bezelN, outerCornerR, tilt, screenshotDataUr
   }, [screenshotDataUrl])
 
   return (
-    <group rotation={[THREE.MathUtils.degToRad(-4), THREE.MathUtils.degToRad(tilt), 0]}>
+    <group rotation={[THREE.MathUtils.degToRad(-4), THREE.MathUtils.degToRad(tilt), THREE.MathUtils.degToRad(rotate)]}>
       {/* Body centered in Z: front face at +depth/2, back at -depth/2 */}
       <mesh geometry={bodyGeom} position={[0, 0, -(depth / 2)]}>
         <meshPhysicalMaterial
@@ -152,10 +153,11 @@ interface Props {
   slotH:  number
   vbW:    number
   tilt:   number
+  rotate: number
   screenshotDataUrl: string | null
 }
 
-export function Device3D({ spec, slotW, slotH, vbW, tilt, screenshotDataUrl }: Props) {
+export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotDataUrl }: Props) {
   const aspect       = slotH / slotW
   const bezelN       = (spec.bezelWidth * (slotW / vbW)) / slotW
   const outerCornerR = spec.outerRx / vbW   // model units — matches android-flat outerRx
@@ -193,6 +195,7 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, screenshotDataUrl }: P
         bezelN={bezelN}
         outerCornerR={outerCornerR}
         tilt={tilt}
+        rotate={rotate}
         screenshotDataUrl={screenshotDataUrl}
       />
     </Canvas>

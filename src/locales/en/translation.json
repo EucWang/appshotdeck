@@ -35,7 +35,11 @@
   "frame": {
     "title": "Device Frame",
     "active": "Active",
-    "tilt": "Tilt"
+    "rotate": "Rotate",
+    "tilt": "Tilt",
+    "zoom": "Zoom",
+    "zoom_reset": "Reset zoom & pan",
+    "zoom_hint": "Scroll to zoom \u00b7 drag to pan"
   },
   "background": {
     "gradients": "Gradients",
@@ -43,9 +47,16 @@
     "custom": "Custom",
     "solid": "Solid",
     "gradient": "Gradient",
+    "image": "Image",
     "from": "From",
     "to": "To",
-    "angle": "Angle"
+    "angle": "Angle",
+    "overlay_color": "Overlay",
+    "overlay_opacity": "Opacity",
+    "blur": "Blur",
+    "frosted": "Frosted",
+    "replace_image": "Replace image",
+    "compressing": "Compressing…"
   },
   "text": {
     "headline": "Headline",
@@ -73,7 +84,8 @@
     "clear_highlight": "Clear",
     "clear_all_highlights": "All",
     "highlight_applied": "✓ Applied",
-    "select_text_hint": "Select text first"
+    "select_text_hint": "Select text first",
+    "y_offset": "Y Offset"
   },
   "strip": {
     "duplicate": "Duplicate",

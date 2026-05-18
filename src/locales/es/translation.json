@@ -35,7 +35,11 @@
   "frame": {
     "title": "Marco de dispositivo",
     "active": "Activo",
-    "tilt": "Inclinación"
+    "rotate": "Rotaci\u00f3n",
+    "tilt": "Inclinaci\u00f3n",
+    "zoom": "Zoom",
+    "zoom_reset": "Restablecer zoom y posici\u00f3n",
+    "zoom_hint": "Scroll para zoom \u00b7 arrastra para mover"
   },
   "background": {
     "gradients": "Degradados",
@@ -43,9 +47,16 @@
     "custom": "Personalizado",
     "solid": "Sólido",
     "gradient": "Degradado",
+    "image": "Imagen",
     "from": "Desde",
     "to": "Hasta",
-    "angle": "Ángulo"
+    "angle": "Ángulo",
+    "overlay_color": "Superposición",
+    "overlay_opacity": "Opacidad",
+    "blur": "Desenfoque",
+    "frosted": "Escarchado",
+    "replace_image": "Reemplazar imagen",
+    "compressing": "Comprimiendo…"
   },
   "text": {
     "headline": "Título",
@@ -73,7 +84,8 @@
     "clear_highlight": "Limpiar",
     "clear_all_highlights": "Todo",
     "highlight_applied": "✓ Aplicado",
-    "select_text_hint": "Selecciona texto primero"
+    "select_text_hint": "Selecciona texto primero",
+    "y_offset": "Desplazamiento Y"
   },
   "strip": {
     "duplicate": "Duplicar",

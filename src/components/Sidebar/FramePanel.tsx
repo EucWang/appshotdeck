@@ -41,6 +41,8 @@ export function FramePanel() {
                 <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
               )}
             </div>
+          ) : frame.id === 'tablet-none' ? (
+            <div className="w-12 h-8 border-2 border-dashed border-current rounded-md flex-shrink-0 opacity-50" />
           ) : (
             <div className="w-12 h-8 border-2 border-current rounded-md flex-shrink-0 opacity-75" />
           )}
@@ -102,6 +104,55 @@ export function FramePanel() {
               <RotateCcw size={14} />
             </button>
           </div>
+          <div className="flex items-center gap-2 pr-1">
+            <span className="text-xs text-muted w-7 flex-shrink-0">{t('frame.rotate')}</span>
+            <input
+              type="range" min={-180} max={180} value={slide.deviceRotate ?? 0}
+              onChange={(e) => updateSlide(activeSlideId, { deviceRotate: Number(e.target.value) })}
+              className="flex-1 min-w-0"
+            />
+            <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{slide.deviceRotate ?? 0}°</span>
+            <button
+              onClick={() => updateSlide(activeSlideId, { deviceRotate: 0 })}
+              className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+              title="Reset rotation"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+        </>
+      )}
+
+      {LANDSCAPE_FORMATS.has(slide.format) && (
+        <>
+          <div className="flex items-center gap-2 pt-2 pr-1">
+            <span className="text-xs text-muted w-7 flex-shrink-0">{t('frame.zoom')}</span>
+            <input
+              type="range" min={100} max={400} step={10}
+              value={slide.screenshotZoom ?? 100}
+              onChange={(e) => {
+                const newZoom = Number(e.target.value)
+                const newMax = Math.max(0, (newZoom / 100 - 1) * 50)
+                const curOX = slide.screenshotOffsetX ?? 0
+                const curOY = slide.screenshotOffsetY ?? 0
+                updateSlide(activeSlideId, {
+                  screenshotZoom: newZoom,
+                  screenshotOffsetX: Math.round(Math.max(-newMax, Math.min(newMax, curOX)) * 10) / 10,
+                  screenshotOffsetY: Math.round(Math.max(-newMax, Math.min(newMax, curOY)) * 10) / 10,
+                })
+              }}
+              className="flex-1 min-w-0"
+            />
+            <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{slide.screenshotZoom ?? 100}%</span>
+            <button
+              onClick={() => updateSlide(activeSlideId, { screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 })}
+              className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+              title={t('frame.zoom_reset')}
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+          <p className="text-xs text-black/25 dark:text-white/25 pl-9">{t('frame.zoom_hint')}</p>
         </>
       )}
 

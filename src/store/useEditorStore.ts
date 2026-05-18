@@ -6,7 +6,7 @@ export function defaultFrameForFormat(format: SlideFormat): FrameId {
   switch (format) {
     case 'phone':      return 'minimal'
     case 'tablet-7':
-    case 'tablet-10':  return 'tablet-flat'
+    case 'tablet-10':  return 'tablet-none'
     case 'iphone-69':
     case 'iphone-65':  return 'ios-flat'
     case 'ipad-13':    return 'ios-ipad'

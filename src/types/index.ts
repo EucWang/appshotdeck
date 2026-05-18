@@ -13,6 +13,7 @@ export type FrameId =
   | 'android-flat'
   | 'android-3d'
   | 'tablet-flat'
+  | 'tablet-none'
   | 'ios-flat'
   | 'ios-3d'
   | 'ios-ipad'
@@ -20,6 +21,7 @@ export type FrameId =
 export type Background =
   | { type: 'solid'; color: string }
   | { type: 'gradient'; from: string; to: string; angle: number }
+  | { type: 'image'; dataUrl: string; overlayColor: string; overlayOpacity: number; blur: number; frosted: number }
 
 export type TextFont = string
 
@@ -45,6 +47,7 @@ export interface Slide {
   textPosition: TextPosition
   deviceOffset: number
   deviceScale: number
+  deviceRotate?: number
   showHeadline: boolean
   showSubtitle: boolean
   headlineFontSize?: number
@@ -58,6 +61,10 @@ export interface Slide {
   subtitleSpans?: TextSpan[]
   headlineHighlightColor?: string
   subtitleHighlightColor?: string
+  screenshotZoom?: number
+  screenshotOffsetX?: number
+  screenshotOffsetY?: number
+  textOffsetY?: number
 }
 
 export interface EditorState {

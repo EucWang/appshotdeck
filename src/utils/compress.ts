@@ -6,6 +6,41 @@ const MAX_DIMENSION = 2048
 // typical app screenshots to 200–500 KB so real-world total stays well under 5 MB.
 const MAX_BYTES = 900_000
 
+const BG_MAX_BYTES = 400_000
+
+export function compressBackgroundImage(dataUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onerror = reject
+    img.onload = () => {
+      let { width, height } = img
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+
+      const target = BG_MAX_BYTES * 1.37
+
+      let quality = 0.88
+      let result = canvas.toDataURL('image/jpeg', quality)
+
+      while (result.length > target && quality > 0.3) {
+        quality = Math.round((quality - 0.08) * 100) / 100
+        result = canvas.toDataURL('image/jpeg', quality)
+      }
+
+      resolve(result)
+    }
+    img.src = dataUrl
+  })
+}
+
 export function compressImage(dataUrl: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()

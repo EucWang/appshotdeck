@@ -20,7 +20,7 @@ export function UploadPanel() {
           reader.readAsDataURL(file)
         })
         const compressed = await compressImage(dataUrl)
-        updateSlide(activeSlideId, { screenshotDataUrl: compressed })
+        updateSlide(activeSlideId, { screenshotDataUrl: compressed, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 })
       } finally {
         setCompressing(false)
       }

@@ -27,7 +27,9 @@ export function SlideStrip() {
         const bgStyle =
           bg.type === 'solid'
             ? { background: bg.color }
-            : { background: `linear-gradient(${bg.angle}deg, ${bg.from}, ${bg.to})` }
+            : bg.type === 'gradient'
+            ? { background: `linear-gradient(${bg.angle}deg, ${bg.from}, ${bg.to})` }
+            : { backgroundImage: `url(${bg.dataUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
 
         const isLandscape = slide.format === 'tablet-7' || slide.format === 'tablet-10'
         const isIpad = slide.format === 'ipad-13'

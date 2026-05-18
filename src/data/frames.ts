@@ -79,6 +79,12 @@ export const frames: FrameDef[] = [
   },
 
   {
+    id: 'tablet-none',
+    label: 'None',
+    formats: ['tablet-7', 'tablet-10'],
+  },
+
+  {
     id: 'ios-ipad',
     label: 'iPad',
     formats: ['ipad-13'],

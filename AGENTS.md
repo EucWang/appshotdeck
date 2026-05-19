@@ -64,7 +64,8 @@ src/
 │       ├── Sidebar.tsx       # Platform (Android/iOS) + format picker + 5-tab navigation
 │       ├── UploadPanel.tsx   # Image upload with drag-drop + compress + screenshot zoom/pan sliders
 │       ├── FramePanel.tsx    # Frame selection + position/size/rotation sliders + layout presets (single/dual)
-│       ├── StylePanel.tsx    # Mockup style presets (8) + border shape/radius/width/color + shadow + opacity + light
+│       ├── StylePanel.tsx    # Mockup style presets (8) + border shape/radius/width/color + shadow + opacity + light pad
+│       ├── LightPad.tsx      # 2D draggable light pad: shadowPercentX/Y (-50 to 50), controls shadow direction
 │       ├── BackgroundPanel.tsx # Gradient/solid/image presets + custom color picker + image overlay/blur/frosted
 │       └── TextPanel.tsx     # Headline/subtitle: text, color, font family/size/weight/italic, highlight, offset, visibility
 │
@@ -74,7 +75,7 @@ src/
 │   ├── project.ts            # Save/load project as ZIP (config.json + images/*.png), version 2
 │   ├── richtext.tsx          # TextSpan rendering: renderColoredText, applySpan, clearSpanRange, adjustSpansOnTextChange
 │   ├── mockupStyle.ts        # Mockup CSS generator: computeRadius, computeShadow, computeAdaptiveShadow,
-│   │                         #   getBezelLightColor, getMockupFrameCSS
+│   │                         #   getMockupFrameCSS
 │   └── fonts.ts              # Font utilities: resolveFontFamily, getSystemFonts (queryLocalFonts API),
 │                             #   isFreeCommercial (100+ fonts validated)
 │
@@ -98,7 +99,7 @@ src/
 - `deviceSlotFromSlide(slide)` — extracts `DeviceSlot` from legacy single-device fields
 - `toggleScreenshotCount(slide, count)` — switches between 1 and 2 screenshots, migrating data
 
-Key Slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl`, `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`, `headlineSpans`, `subtitleSpans`, `headlineHighlightColor`, `subtitleHighlightColor`, `headlineFontSize`, `subtitleFontSize`, `textFontFamily`, `headlineFontWeight`, `subtitleFontWeight`, `headlineItalic`, `subtitleItalic`, `textOffsetY`, `screenshotZoom`, `screenshotOffsetX`, `screenshotOffsetY`, `screenshotCount`, `slots`, `deviceSlots`, `activePresetId`, `deviceRotate`, `mockupStyle`, `borderShape`, `borderRadius`, `borderWidth`, `borderColor`, `shadowMode`, `mockupOpacity`, `frameLightIntensity`
+Key Slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl`, `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`, `headlineSpans`, `subtitleSpans`, `headlineHighlightColor`, `subtitleHighlightColor`, `headlineFontSize`, `subtitleFontSize`, `textFontFamily`, `headlineFontWeight`, `subtitleFontWeight`, `headlineItalic`, `subtitleItalic`, `textOffsetY`, `screenshotZoom`, `screenshotOffsetX`, `screenshotOffsetY`, `screenshotCount`, `slots`, `deviceSlots`, `activePresetId`, `deviceRotate`, `mockupStyle`, `borderShape`, `borderRadius`, `borderWidth`, `borderColor`, `shadowMode`, `mockupOpacity`, `shadowPercentX`, `shadowPercentY`
 
 ### Frame System (`src/data/frames.ts`)
 
@@ -158,9 +159,11 @@ Two frame types, distinguished by `device3d` on `FrameDef`:
 - 8 style presets: `default`, `glass-light`, `glass-dark`, `liquid-glass`, `inset-light`, `inset-dark`, `outline`, `border`
 - Border controls: `borderShape` (sharp/curved/round), `borderRadius`, `borderWidth`, `borderColor`
 - Shadow modes: `none`, `spread`, `hug`, `adaptive` (brightness-based)
-- `getMockupFrameCSS(slide, bgBrightness)` returns the full CSS properties object
-- `getBezelLightColor(baseColor, intensity)` adjusts bezel highlight by `frameLightIntensity`
+- `computeShadow(mode, percentX, percentY)` — directional multi-layer box-shadow, offset/blur driven by light pad position
+- `computeAdaptiveShadow(bgBright, percentX, percentY)` — adaptive shadow with directional offset
+- `getMockupFrameCSS(slide, baseRadius)` returns the full CSS properties object
 - `mockupOpacity` (0–100) applied as CSS opacity on the device wrapper
+- Light pad: `shadowPercentX` (-50 to 50), `shadowPercentY` (-50 to 50) — 2D draggable pad in StylePanel controls shadow direction and intensity. Default `(0, -20)` means light from above, shadow falls downward
 
 ### ScreenContent (`src/components/Canvas/ScreenContent.tsx`)
 

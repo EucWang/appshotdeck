@@ -157,11 +157,12 @@ interface Props {
   rotate: number
   screenshotDataUrl: string | null
   mockupOpacity?: number
-  frameLightIntensity?: number
+  shadowPercentX?: number
+  shadowPercentY?: number
   shadowMode?: ShadowMode
 }
 
-export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotDataUrl, mockupOpacity = 100, frameLightIntensity = 100, shadowMode = 'spread' }: Props) {
+export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotDataUrl, mockupOpacity = 100, shadowPercentX = 0, shadowPercentY = -20, shadowMode = 'spread' }: Props) {
   const aspect       = slotH / slotW
   const bezelN       = (spec.bezelWidth * (slotW / vbW)) / slotW
   const outerCornerR = spec.outerRx / vbW   // model units — matches android-flat outerRx
@@ -175,7 +176,10 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotData
   const zExcursion = 0.5 * Math.sin(maxTiltRad) + (modelDepth / 2 + modelBevel) * Math.cos(maxTiltRad)
   const cameraZ    = (aspect / 2) / Math.tan((fov / 2) * (Math.PI / 180)) + zExcursion + 0.05
 
-  const lightFactor = frameLightIntensity / 100
+  const lightDistance = Math.sqrt(shadowPercentX * shadowPercentX + shadowPercentY * shadowPercentY)
+  const lightFactor = Math.max(lightDistance / 50, 0.3)
+  const lightX = shadowPercentX / 50 * 5
+  const lightY = -shadowPercentY / 50 * 5
 
   const dropShadow = (() => {
     switch (shadowMode) {
@@ -199,9 +203,8 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotData
       <SizeEnforcer w={slotW} h={slotH} />
 
       {/* Ambient base so body is never pure black */}
-      <ambientLight intensity={0.4 * lightFactor} />
-      <directionalLight position={[2, 8, 1]} intensity={3 * lightFactor} />
-      <directionalLight position={[-3, -2, 4]} intensity={0.6 * lightFactor} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[lightX, lightY, 5]} intensity={2.5 * lightFactor} />
 
       <PhoneModel
         spec={spec}

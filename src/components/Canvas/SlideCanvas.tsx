@@ -5,7 +5,7 @@ import { resolveFontFamily } from '../../utils/fonts'
 import { renderColoredText } from '../../utils/richtext'
 import { Device3D } from './Device3D'
 import { ScreenContent } from './ScreenContent'
-import { computeRadius, computeShadow, computeAdaptiveShadow, getBezelLightColor } from '../../utils/mockupStyle'
+import { computeRadius, computeShadow, computeAdaptiveShadow } from '../../utils/mockupStyle'
 import { useEditorStore } from '../../store/useEditorStore'
 
 interface Props {
@@ -363,7 +363,8 @@ function DeviceFrame({
   const borderRadiusOverride = slide.borderRadius ?? 20
   const shadowMode = slide.shadowMode ?? 'spread'
   const mockupOpacity = slide.mockupOpacity ?? 100
-  const frameLightIntensity = slide.frameLightIntensity ?? 100
+  const shadowPX = slide.shadowPercentX ?? 0
+  const shadowPY = slide.shadowPercentY ?? -20
 
   const isGlass = mockupStyle === 'glass-light' || mockupStyle === 'glass-dark' || mockupStyle === 'liquid-glass'
 
@@ -413,17 +414,18 @@ function DeviceFrame({
           rotate={devSlot.deviceRotate}
           screenshotDataUrl={screenshotDataUrl}
           mockupOpacity={slide.mockupOpacity ?? 100}
-          frameLightIntensity={slide.frameLightIntensity ?? 100}
+          shadowPercentX={slide.shadowPercentX ?? 0}
+          shadowPercentY={slide.shadowPercentY ?? -20}
           shadowMode={slide.shadowMode ?? 'spread'}
         />
       ) : (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           {frame.bezel ? (
             (() => {
-              const bezelColor = getBezelLightColor(frame.bezel!.color, frameLightIntensity)
+              const bezelColor = frame.bezel!.color
               const shadowCSS = shadowMode === 'adaptive'
-                ? computeAdaptiveShadow(bgBrightness(slide))
-                : computeShadow(shadowMode)
+                ? computeAdaptiveShadow(bgBrightness(slide), shadowPX, shadowPY)
+                : computeShadow(shadowMode, shadowPX, shadowPY)
 
               if (isGlass) {
                 const glassBg = mockupStyle === 'glass-light' ? 'rgba(255,255,255,0.12)'
@@ -453,18 +455,28 @@ function DeviceFrame({
 
               const isOutlineLike = mockupStyle === 'outline'
 
+              const insetLightShadow = mockupStyle === 'inset-light' ? (() => {
+                const dist = Math.sqrt(shadowPX * shadowPX + shadowPY * shadowPY)
+                const intensity = Math.max(dist / 50, 0.15)
+                return `inset ${Math.round(-shadowPX * 0.08)}px ${Math.round(-shadowPY * 0.08)}px 8px rgba(255,255,255,${intensity.toFixed(2)}), inset 0 -1px 3px rgba(0,0,0,0.15)${shadowCSS ? ', ' + shadowCSS : ''}`
+              })() : undefined
+
+              const insetDarkShadow = mockupStyle === 'inset-dark' ? (() => {
+                const dist = Math.sqrt(shadowPX * shadowPX + shadowPY * shadowPY)
+                const intensity = Math.max(dist / 50 * 0.4, 0.1)
+                return `inset ${Math.round(-shadowPX * 0.08)}px ${Math.round(-shadowPY * 0.08)}px 10px rgba(0,0,0,${intensity.toFixed(2)})${shadowCSS ? ', ' + shadowCSS : ''}`
+              })() : undefined
+
               return (
                 <div style={{
                   position: 'absolute', inset: 0,
                   borderRadius: computedRadius,
                   background: isOutlineLike ? 'transparent' : bezelColor,
                   overflow: 'hidden',
-                  ...(shadowCSS ? { boxShadow: shadowCSS } : {}),
+                  boxShadow: insetLightShadow ?? insetDarkShadow ?? (shadowCSS || undefined),
                   opacity: mockupOpacity / 100,
                   ...(mockupStyle === 'outline' ? { background: 'transparent', border: `${slide.borderWidth ?? 2}px solid ${slide.borderColor ?? 'rgba(255,255,255,0.4)'}` } : {}),
                   ...(mockupStyle === 'border' ? { border: `${slide.borderWidth ?? 2}px solid ${slide.borderColor ?? 'rgba(255,255,255,0.4)'}` } : {}),
-                  ...(mockupStyle === 'inset-light' ? { boxShadow: `inset 0 2px 8px rgba(255,255,255,${0.2 * frameLightIntensity / 100}), inset 0 -1px 3px rgba(0,0,0,0.15)${shadowCSS ? ', ' + shadowCSS : ''}` } : {}),
-                  ...(mockupStyle === 'inset-dark' ? { boxShadow: `inset 0 3px 10px rgba(0,0,0,${0.4 * frameLightIntensity / 100})${shadowCSS ? ', ' + shadowCSS : ''}` } : {}),
                 }}>
                   <div style={{
                     position: 'absolute',
@@ -480,8 +492,8 @@ function DeviceFrame({
           ) : (
             (() => {
               const shadowCSS = shadowMode === 'adaptive'
-                ? computeAdaptiveShadow(bgBrightness(slide))
-                : computeShadow(shadowMode)
+                ? computeAdaptiveShadow(bgBrightness(slide), shadowPX, shadowPY)
+                : computeShadow(shadowMode, shadowPX, shadowPY)
 
               if (isGlass) {
                 const glassBg = mockupStyle === 'glass-light' ? 'rgba(255,255,255,0.12)'
@@ -516,9 +528,13 @@ function DeviceFrame({
               } else if (mockupStyle === 'border') {
                 extraCSS.border = `${slide.borderWidth ?? 2}px solid ${slide.borderColor ?? 'rgba(255,255,255,0.4)'}`
               } else if (mockupStyle === 'inset-light') {
-                extraCSS.boxShadow = `inset 0 2px 8px rgba(255,255,255,${0.2 * frameLightIntensity / 100}), inset 0 -1px 3px rgba(0,0,0,0.15)${shadowCSS ? ', ' + shadowCSS : ''}`
+                const dist = Math.sqrt(shadowPX * shadowPX + shadowPY * shadowPY)
+                const intensity = Math.max(dist / 50, 0.15)
+                extraCSS.boxShadow = `inset ${Math.round(-shadowPX * 0.08)}px ${Math.round(-shadowPY * 0.08)}px 8px rgba(255,255,255,${intensity.toFixed(2)}), inset 0 -1px 3px rgba(0,0,0,0.15)${shadowCSS ? ', ' + shadowCSS : ''}`
               } else if (mockupStyle === 'inset-dark') {
-                extraCSS.boxShadow = `inset 0 3px 10px rgba(0,0,0,${0.4 * frameLightIntensity / 100})${shadowCSS ? ', ' + shadowCSS : ''}`
+                const dist = Math.sqrt(shadowPX * shadowPX + shadowPY * shadowPY)
+                const intensity = Math.max(dist / 50 * 0.4, 0.1)
+                extraCSS.boxShadow = `inset ${Math.round(-shadowPX * 0.08)}px ${Math.round(-shadowPY * 0.08)}px 10px rgba(0,0,0,${intensity.toFixed(2)})${shadowCSS ? ', ' + shadowCSS : ''}`
               } else if (shadowCSS) {
                 extraCSS.boxShadow = shadowCSS
               }

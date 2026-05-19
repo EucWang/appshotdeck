@@ -121,7 +121,8 @@ export interface Slide {
   borderColor?: string
   shadowMode?: ShadowMode
   mockupOpacity?: number
-  frameLightIntensity?: number
+  shadowPercentX?: number
+  shadowPercentY?: number
   showGrid?: boolean
   showSafeArea?: boolean
   overlays?: OverlayIcon[]

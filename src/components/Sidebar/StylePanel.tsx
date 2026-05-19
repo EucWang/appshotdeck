@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Sun } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import type { MockupStyle, BorderShape, ShadowMode, Slide } from '../../types'
+import { LightPad } from './LightPad'
 
 const STYLES: MockupStyle[] = ['default', 'glass-light', 'glass-dark', 'liquid-glass', 'inset-light', 'inset-dark', 'outline', 'border']
 
@@ -54,6 +56,7 @@ function hexToRgba(hex: string): string {
 export function StylePanel() {
   const { t } = useTranslation()
   const { slides, activeSlideId, updateSlide } = useEditorStore()
+  const [showLightPad, setShowLightPad] = useState(false)
   const slide = slides.find((s) => s.id === activeSlideId)
   if (!slide) return null
 
@@ -66,7 +69,8 @@ export function StylePanel() {
   const borderColor = slide.borderColor ?? 'rgba(255,255,255,0.4)'
   const shadowMode = slide.shadowMode ?? 'spread'
   const mockupOpacity = slide.mockupOpacity ?? 100
-  const frameLightIntensity = slide.frameLightIntensity ?? 100
+  const shadowPX = slide.shadowPercentX ?? 0
+  const shadowPY = slide.shadowPercentY ?? -20
 
   return (
     <div className="p-4 space-y-5">
@@ -209,23 +213,30 @@ export function StylePanel() {
 
       {/* Section 5: Adjust Light */}
       <div>
-        <p className="text-xs text-muted uppercase tracking-wider mb-2">{t('style.adjust_light')}</p>
-        <div className="flex items-center gap-2 pr-1">
-          <span className="text-xs text-muted w-7 flex-shrink-0">{t('style.adjust_light')}</span>
-          <input
-            type="range" min={0} max={200} value={frameLightIntensity}
-            onChange={(e) => patch({ frameLightIntensity: Number(e.target.value) })}
-            className="flex-1 min-w-0"
-          />
-          <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{frameLightIntensity}%</span>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-muted uppercase tracking-wider">{t('style.adjust_light')}</p>
           <button
-            onClick={() => patch({ frameLightIntensity: 100 })}
-            className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title={t('style.reset')}
+            onClick={() => setShowLightPad(!showLightPad)}
+            disabled={shadowMode === 'none'}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all border ${
+              showLightPad
+                ? 'border-indigo-400 bg-indigo-500/20 text-white'
+                : 'option-idle'
+            } ${shadowMode === 'none' ? 'opacity-40 cursor-not-allowed' : ''}`}
           >
-            <RotateCcw size={14} />
+            <Sun size={14} />
+            {t('style.adjust_light')}
           </button>
         </div>
+        {showLightPad && (
+          <div className="flex justify-center py-2">
+            <LightPad
+              valueX={shadowPX}
+              valueY={shadowPY}
+              onChange={(x, y) => patch({ shadowPercentX: x, shadowPercentY: y })}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

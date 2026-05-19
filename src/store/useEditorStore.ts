@@ -42,7 +42,8 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   borderColor: 'rgba(255,255,255,0.4)',
   shadowMode: 'spread',
   mockupOpacity: 100,
-  frameLightIntensity: 100,
+  shadowPercentX: 0,
+  shadowPercentY: -20,
   overlays: [],
 })
 

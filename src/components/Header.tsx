@@ -13,6 +13,7 @@ interface Props {
 const LANGS = [
   { code: 'en', label: 'EN' },
   { code: 'es', label: 'ES' },
+  { code: 'zh', label: '中文' },
 ]
 
 export function Header({ canvasRefs }: Props) {

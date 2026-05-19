@@ -26,7 +26,8 @@
       "text": "Texto",
       "style": "Estilo",
       "overlay": "Iconos"
-    }
+    },
+    "apply_to_all": "Aplicar estilo a todo"
   },
   "upload": {
     "drop_title": "Arrastra tu captura aquí",
@@ -98,7 +99,15 @@
     "blur": "Desenfoque",
     "frosted": "Escarchado",
     "replace_image": "Reemplazar imagen",
-    "compressing": "Comprimiendo…"
+    "compressing": "Comprimiendo…",
+    "cat_dark": "Oscuro",
+    "cat_midnight": "Medianoche",
+    "cat_vibrant": "Vibrante",
+    "cat_cool": "Frío",
+    "cat_warm": "Cálido",
+    "cat_pastel": "Pastel",
+    "cat_light": "Claro",
+    "cat_solid": "Sólido"
   },
   "text": {
     "headline": "Título",

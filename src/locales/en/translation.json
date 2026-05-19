@@ -26,7 +26,8 @@
       "text": "Text",
       "style": "Style",
       "overlay": "Icons"
-    }
+    },
+    "apply_to_all": "Apply Style to All"
   },
   "upload": {
     "drop_title": "Drop screenshot here",
@@ -98,7 +99,15 @@
     "blur": "Blur",
     "frosted": "Frosted",
     "replace_image": "Replace image",
-    "compressing": "Compressing…"
+    "compressing": "Compressing…",
+    "cat_dark": "Dark",
+    "cat_midnight": "Midnight",
+    "cat_vibrant": "Vibrant",
+    "cat_cool": "Cool",
+    "cat_warm": "Warm",
+    "cat_pastel": "Pastel",
+    "cat_light": "Light",
+    "cat_solid": "Solid"
   },
   "text": {
     "headline": "Headline",

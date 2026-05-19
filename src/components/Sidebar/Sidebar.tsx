@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Upload, Smartphone, Image, Type, Monitor, Palette, Sticker } from 'lucide-react'
+import { Upload, Smartphone, Image, Type, Monitor, Palette, Sticker, Paintbrush } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { UploadPanel } from './UploadPanel'
 import { FramePanel } from './FramePanel'
@@ -20,7 +20,7 @@ export function Sidebar() {
   const { t } = useTranslation()
   const [tab, setTab] = useState<Tab>('upload')
   const [platform, setPlatform] = useState<Platform>('android')
-  const { slides, activeSlideId, updateSlide } = useEditorStore()
+  const { slides, activeSlideId, updateSlide, applyStyleToAll } = useEditorStore()
   const slide = slides.find((s) => s.id === activeSlideId)
 
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -131,6 +131,18 @@ export function Sidebar() {
         {tab === 'text'       && <TextPanel />}
         {tab === 'overlay'    && <OverlayPanel />}
       </div>
+
+      {slides.length > 1 && (
+        <div className="px-3 py-2 border-t border-subtle">
+          <button
+            onClick={() => applyStyleToAll(activeSlideId)}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25 active:bg-indigo-500/35 transition-all"
+          >
+            <Paintbrush className="w-3.5 h-3.5" />
+            {t('sidebar.apply_to_all')}
+          </button>
+        </div>
+      )}
 
       <SlideStrip />
     </aside>

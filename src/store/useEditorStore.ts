@@ -50,6 +50,22 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   overlays: [],
 })
 
+const STYLE_FIELDS: (keyof Slide)[] = [
+  'background', 'frame', 'frameTilt',
+  'mockupStyle',
+  'borderShape', 'borderRadius', 'borderWidth', 'borderColor',
+  'shadowMode', 'shadowPercentX', 'shadowPercentY',
+  'mockupOpacity',
+  'screenshotBrightness', 'screenshotContrast', 'screenshotSaturation',
+  'textColor', 'subtitleColor', 'textFontFamily',
+  'headlineFontSize', 'subtitleFontSize',
+  'headlineFontWeight', 'subtitleFontWeight',
+  'headlineItalic', 'subtitleItalic',
+  'headlineHighlightColor', 'subtitleHighlightColor',
+  'textPosition', 'textOffsetY', 'textOffsetX',
+  'screenshotCount', 'deviceSlots', 'activePresetId',
+]
+
 export function screenshotSlotFromSlide(slide: Slide): ScreenshotSlot {
   return {
     screenshotDataUrl: slide.screenshotDataUrl ?? null,
@@ -191,6 +207,33 @@ export const useEditorStore = create<EditorState>()(
           const [moved] = slides.splice(from, 1)
           slides.splice(to, 0, moved)
           return { slides }
+        }),
+
+      applyStyleToAll: (sourceSlideId) =>
+        set((s) => {
+          const source = s.slides.find((sl) => sl.id === sourceSlideId)
+          if (!source || s.slides.length < 2) return s
+          const basePatch: Partial<Slide> = {}
+          for (const key of STYLE_FIELDS) {
+            const val = source[key]
+            if (val !== undefined) (basePatch as Record<string, unknown>)[key] = val
+          }
+          const sourceCount = source.screenshotCount ?? 1
+          return {
+            slides: s.slides.map((sl) => {
+              if (sl.id === sourceSlideId) return sl
+              const patch = { ...basePatch }
+              const targetCount = sl.screenshotCount ?? 1
+              if (targetCount !== sourceCount) {
+                delete (patch as Record<string, unknown>).screenshotCount
+                delete (patch as Record<string, unknown>).deviceSlots
+                delete (patch as Record<string, unknown>).activePresetId
+              } else if (patch.deviceSlots) {
+                patch.deviceSlots = source.deviceSlots?.map((ds) => ({ ...ds }))
+              }
+              return { ...sl, ...patch }
+            }),
+          }
         }),
     }),
     {

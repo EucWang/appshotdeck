@@ -141,6 +141,7 @@ export interface EditorState {
   setActiveSlide: (id: string) => void
   updateSlide: (id: string, patch: Partial<Slide>) => void
   reorderSlides: (fromIndex: number, toIndex: number) => void
+  applyStyleToAll: (sourceSlideId: string) => void
   addOverlay: (slideId: string, overlay: OverlayIcon) => void
   removeOverlay: (slideId: string, overlayId: string) => void
   updateOverlay: (slideId: string, overlayId: string, patch: Partial<OverlayIcon>) => void

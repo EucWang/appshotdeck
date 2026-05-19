@@ -26,7 +26,8 @@
       "text": "文字",
       "style": "样式",
       "overlay": "图标"
-    }
+    },
+    "apply_to_all": "应用样式到所有幻灯片"
   },
   "upload": {
     "drop_title": "拖放截图到此处",
@@ -77,7 +78,11 @@
     "shadow_adaptive": "自适应",
     "opacity": "不透明度",
     "adjust_light": "调整光线",
-    "reset": "重置"
+    "reset": "重置",
+    "filters": "截图滤镜",
+    "brightness": "亮度",
+    "contrast": "对比度",
+    "saturation": "饱和度"
   },
   "background": {
     "gradients": "渐变",
@@ -94,7 +99,15 @@
     "blur": "模糊",
     "frosted": "磨砂",
     "replace_image": "替换图片",
-    "compressing": "压缩中…"
+    "compressing": "压缩中…",
+    "cat_dark": "深色",
+    "cat_midnight": "午夜",
+    "cat_vibrant": "鲜艳",
+    "cat_cool": "冷色",
+    "cat_warm": "暖色",
+    "cat_pastel": "柔和",
+    "cat_light": "浅色",
+    "cat_solid": "纯色"
   },
   "text": {
     "headline": "标题",

@@ -13,7 +13,9 @@ A local, browser-only tool for composing Play Store and App Store marketing scre
 - **Border customization** — Shape (sharp/curved/round), radius, width, color
 - **Shadow system** — 4 modes: none, spread, hug, adaptive (brightness-based)
 - **Screenshot interaction** — Mouse wheel zoom (100–400%) and drag-to-pan with constrained range
-- **Background system** — 6 gradient presets, 6 solid presets, custom color/gradient picker, image backgrounds with overlay, blur, and frosted effects
+- **Screenshot filters** — Per-slide brightness, contrast, and saturation adjustments (0–200%)
+- **Batch style apply** — One-click copy visual style (background, frame, mockup, border, shadow, opacity, light, filters, text styling) from the active slide to all other slides; each slide keeps its own screenshots, text content, and overlays
+- **Background system** — 62 presets across 8 categories (Dark, Midnight, Vibrant, Cool, Warm, Pastel, Light, Solid), custom color/gradient picker, image backgrounds with overlay, blur, and frosted effects
 - **Typography** — Headline + subtitle with custom font family (system fonts), font size, weight (300–900), italic, color, and text vertical offset
 - **Rich text highlighting** — Per-range color highlighting with visual text span selection
 - **Text visibility** — Individual show/hide toggle for headline and subtitle

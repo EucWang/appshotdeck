@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { Loader2, Upload } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../../store/useEditorStore'
-import { GRADIENT_PRESETS, SOLID_PRESETS } from '../../data/backgrounds'
+import { BACKGROUND_CATEGORIES } from '../../data/backgrounds'
 import { compressBackgroundImage } from '../../utils/compress'
 import type { Background } from '../../types'
 
@@ -55,27 +55,30 @@ export function BackgroundPanel() {
   if (!slide) return null
 
   const bg = slide.background
+  const [activeCat, setActiveCat] = useState(BACKGROUND_CATEGORIES[0].id)
+  const activePresets = BACKGROUND_CATEGORIES.find(c => c.id === activeCat)?.presets ?? []
 
   return (
     <div className="p-4 space-y-4">
       <div className="space-y-2">
-        <p className="text-xs text-muted uppercase tracking-wider">{t('background.gradients')}</p>
-        <div className="grid grid-cols-3 gap-2">
-          {GRADIENT_PRESETS.map((p) => (
-            <button key={p.label} title={p.label}
-              onClick={() => updateSlide(activeSlideId, { background: p.bg })}
-              className="aspect-video rounded-lg border-2 border-medium hover:border-indigo-400 transition-all"
-              style={bgPreviewStyle(p.bg)}
-            />
+        <div className="flex flex-wrap gap-1 pb-1">
+          {BACKGROUND_CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCat(cat.id)}
+              className={`text-xs px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                activeCat === cat.id
+                  ? 'bg-indigo-500/30 text-indigo-300 dark:text-indigo-400 font-medium'
+                  : 'option-idle'
+              }`}
+            >
+              {t(cat.labelKey)}
+            </button>
           ))}
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs text-muted uppercase tracking-wider">{t('background.solids')}</p>
         <div className="grid grid-cols-3 gap-2">
-          {SOLID_PRESETS.map((p) => (
-            <button key={p.label} title={p.label}
+          {activePresets.map((p, i) => (
+            <button key={`${activeCat}-${i}`} title={p.label}
               onClick={() => updateSlide(activeSlideId, { background: p.bg })}
               className="aspect-video rounded-lg border-2 border-medium hover:border-indigo-400 transition-all"
               style={bgPreviewStyle(p.bg)}

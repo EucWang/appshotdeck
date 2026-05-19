@@ -24,7 +24,8 @@
       "frame": "Frame",
       "background": "BG",
       "text": "Text",
-      "style": "Style"
+      "style": "Style",
+      "overlay": "Icons"
     }
   },
   "upload": {
@@ -131,5 +132,23 @@
   },
   "canvas": {
     "upload_prompt": "Upload Screenshot"
+  },
+  "overlay": {
+    "title": "Overlay Icons",
+    "upload": "Upload Image",
+    "presets": "Presets",
+    "list": "Added Icons",
+    "max_reached": "Maximum 8 icons",
+    "add_preset": "Click to add",
+    "position_x": "X Position",
+    "position_y": "Y Position",
+    "scale": "Scale",
+    "rotate": "Rotate",
+    "opacity": "Opacity",
+    "delete": "Delete",
+    "empty": "No icons added yet",
+    "drop_title": "Drop icon here",
+    "drop_subtitle": "or click to browse",
+    "compressing": "Compressing…"
   }
 }

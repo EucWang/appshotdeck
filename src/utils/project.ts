@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
-import type { Background, ScreenshotSlot, Slide } from '../types'
+import type { Background, OverlayIcon, ScreenshotSlot, Slide } from '../types'
 
-const PROJECT_VERSION = 2
+const PROJECT_VERSION = 3
 
 type JsonBackground =
   | { type: 'solid'; color: string }
@@ -12,10 +12,15 @@ type JsonScreenshotSlot = Omit<ScreenshotSlot, 'screenshotDataUrl'> & {
   image: string | null
 }
 
-interface SlideEntry extends Omit<Slide, 'screenshotDataUrl' | 'background' | 'slots'> {
+type JsonOverlayIcon = Omit<OverlayIcon, 'dataUrl'> & {
+  image: string | null
+}
+
+interface SlideEntry extends Omit<Slide, 'screenshotDataUrl' | 'background' | 'slots' | 'overlays'> {
   image: string | null
   background: JsonBackground
   jsonSlots?: JsonScreenshotSlot[]
+  jsonOverlays?: JsonOverlayIcon[]
 }
 
 interface ProjectConfig {
@@ -37,7 +42,7 @@ export async function saveProject(slides: Slide[]): Promise<void> {
 
   const configSlides: SlideEntry[] = await Promise.all(
     slides.map(async (slide, idx) => {
-      const { screenshotDataUrl, background, slots, ...rest } = slide
+      const { screenshotDataUrl, background, slots, overlays, ...rest } = slide
       let image: string | null = null
 
       if (screenshotDataUrl) {
@@ -68,7 +73,20 @@ export async function saveProject(slides: Slide[]): Promise<void> {
         })
       }
 
-      return { ...rest, image, background: jsonBg, jsonSlots } as unknown as SlideEntry
+      let jsonOverlays: JsonOverlayIcon[] | undefined
+      if (overlays && overlays.length > 0) {
+        jsonOverlays = overlays.map((o, oIdx) => {
+          if (!o.dataUrl) {
+            return { id: o.id, x: o.x, y: o.y, scale: o.scale, rotate: o.rotate, opacity: o.opacity, image: null }
+          }
+          const oBase64 = o.dataUrl.split(',')[1]
+          const filename = `overlay-${idx + 1}-${oIdx + 1}.png`
+          images.file(filename, oBase64, { base64: true })
+          return { id: o.id, x: o.x, y: o.y, scale: o.scale, rotate: o.rotate, opacity: o.opacity, image: `images/${filename}` }
+        })
+      }
+
+      return { ...rest, image, background: jsonBg, jsonSlots, jsonOverlays } as unknown as SlideEntry
     }),
   )
 
@@ -136,6 +154,7 @@ export async function loadProject(file: File): Promise<LoadedProject> {
       const rest = { ...entry } as Record<string, unknown>
       delete rest.image
       delete rest.jsonSlots
+      delete rest.jsonOverlays
 
       const slide: Record<string, unknown> = { ...rest, screenshotDataUrl, background }
 
@@ -155,6 +174,27 @@ export async function loadProject(file: File): Promise<LoadedProject> {
           }),
         )
         slide.slots = loadedSlots
+      }
+
+      if (entry.jsonOverlays) {
+        const loadedOverlays: OverlayIcon[] = await Promise.all(
+          entry.jsonOverlays.map(async (jo) => {
+            let dataUrl: string | null = null
+            if (jo.image) {
+              dataUrl = await loadImageFromZip(zip, jo.image)
+            }
+            return {
+              id: jo.id,
+              dataUrl,
+              x: jo.x ?? 50,
+              y: jo.y ?? 50,
+              scale: jo.scale ?? 100,
+              rotate: jo.rotate ?? 0,
+              opacity: jo.opacity ?? 100,
+            }
+          }),
+        )
+        slide.overlays = loadedOverlays
       }
 
       return slide as unknown as Slide

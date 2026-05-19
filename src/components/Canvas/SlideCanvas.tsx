@@ -1,11 +1,12 @@
-import { forwardRef } from 'react'
-import type { DeviceSlot, Slide, SlideFormat } from '../../types'
+import { forwardRef, useCallback, useRef, useState } from 'react'
+import type { DeviceSlot, OverlayIcon, Slide, SlideFormat } from '../../types'
 import { frameById } from '../../data/frames'
 import { resolveFontFamily } from '../../utils/fonts'
 import { renderColoredText } from '../../utils/richtext'
 import { Device3D } from './Device3D'
 import { ScreenContent } from './ScreenContent'
 import { computeRadius, computeShadow, computeAdaptiveShadow, getBezelLightColor } from '../../utils/mockupStyle'
+import { useEditorStore } from '../../store/useEditorStore'
 
 interface Props {
   slide: Slide
@@ -175,6 +176,110 @@ function colorBrightness(hex: string): number {
   const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
   if (!m) return 0.5
   return (parseInt(m[1], 16) * 0.299 + parseInt(m[2], 16) * 0.587 + parseInt(m[3], 16) * 0.114) / 255
+}
+
+function OverlayIconLayer({
+  slide,
+  W,
+  H,
+  interactive,
+  scale,
+}: {
+  slide: Slide
+  W: number
+  H: number
+  interactive: boolean
+  scale: number
+}) {
+  const { activeOverlayId, setActiveOverlayId, updateOverlay } = useEditorStore()
+  const [dragging, setDragging] = useState<string | null>(null)
+  const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null)
+
+  const overlays = slide.overlays ?? []
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, overlay: OverlayIcon) => {
+    if (!interactive) return
+    e.preventDefault()
+    e.stopPropagation()
+    setActiveOverlayId(overlay.id)
+    setDragging(overlay.id)
+    dragStart.current = { mx: e.clientX, my: e.clientY, ox: overlay.x, oy: overlay.y }
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragStart.current) return
+      const dx = (ev.clientX - dragStart.current.mx) / scale
+      const dy = (ev.clientY - dragStart.current.my) / scale
+      const newX = Math.round((dragStart.current.ox + (dx / W) * 100) * 10) / 10
+      const newY = Math.round((dragStart.current.oy + (dy / H) * 100) * 10) / 10
+      updateOverlay(slide.id, overlay.id, {
+        x: Math.max(0, Math.min(100, newX)),
+        y: Math.max(0, Math.min(100, newY)),
+      })
+    }
+    const onUp = () => {
+      setDragging(null)
+      dragStart.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [interactive, setActiveOverlayId, scale, W, H, slide.id, updateOverlay])
+
+  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+  }, [])
+
+  const handleCanvasClick = useCallback(() => {
+    if (interactive) setActiveOverlayId(null)
+  }, [interactive, setActiveOverlayId])
+
+  if (overlays.length === 0) return null
+
+  return (
+    <div
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      onClick={handleCanvasClick}
+    >
+      {overlays.map((overlay) => {
+        const isActive = interactive && activeOverlayId === overlay.id
+        const left = Math.round(W * (overlay.x / 100))
+        const top = Math.round(H * (overlay.y / 100))
+        const scaleFactor = (overlay.scale ?? 100) / 100
+        const opacity = (overlay.opacity ?? 100) / 100
+        const rotate = overlay.rotate ?? 0
+
+        return (
+          <div
+            key={overlay.id}
+            style={{
+              position: 'absolute',
+              left,
+              top,
+              transform: `translate(-50%, -50%) scale(${scaleFactor}) rotate(${rotate}deg)`,
+              opacity,
+              cursor: interactive ? (dragging === overlay.id ? 'grabbing' : 'grab') : undefined,
+              outline: isActive ? '2px solid #6366F1' : undefined,
+              outlineOffset: '4px',
+              borderRadius: 4,
+              pointerEvents: interactive ? 'auto' : 'none',
+            }}
+            onMouseDown={(e) => handleMouseDown(e, overlay)}
+            onClick={handleOverlayClick}
+          >
+            {overlay.dataUrl && (
+              <img
+                src={overlay.dataUrl}
+                alt=""
+                draggable={false}
+                style={{ display: 'block', maxWidth: W * 0.5, maxHeight: H * 0.3 }}
+              />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 function renderGlassBg(slide: Slide) {
@@ -478,6 +583,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
         }}
       >
         <BackgroundLayers bg={slide.background} />
+        <OverlayIconLayer slide={slide} W={W} H={H} interactive={interactive} scale={scale} />
         {landscape ? (
           <div
             style={{

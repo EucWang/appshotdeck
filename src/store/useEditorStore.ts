@@ -43,6 +43,7 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   shadowMode: 'spread',
   mockupOpacity: 100,
   frameLightIntensity: 100,
+  overlays: [],
 })
 
 export function screenshotSlotFromSlide(slide: Slide): ScreenshotSlot {
@@ -103,6 +104,7 @@ export const useEditorStore = create<EditorState>()(
     (set) => ({
       slides: [defaultSlide('phone')],
       activeSlideId: '',
+      activeOverlayId: null as string | null,
 
       addSlide: () =>
         set((s) => {
@@ -120,6 +122,7 @@ export const useEditorStore = create<EditorState>()(
             id: crypto.randomUUID(),
             slots: src.slots ? src.slots.map((sl) => ({ ...sl })) : undefined,
             deviceSlots: src.deviceSlots ? src.deviceSlots.map((ds) => ({ ...ds })) : undefined,
+            overlays: src.overlays ? src.overlays.map((o) => ({ ...o })) : [],
           }
           const idx = s.slides.findIndex((sl) => sl.id === id)
           const slides = [...s.slides]
@@ -136,12 +139,47 @@ export const useEditorStore = create<EditorState>()(
           return { slides, activeSlideId }
         }),
 
-      setActiveSlide: (id) => set({ activeSlideId: id }),
+      setActiveSlide: (id) => set({ activeSlideId: id, activeOverlayId: null }),
 
       updateSlide: (id, patch) =>
         set((s) => ({
           slides: s.slides.map((sl) => (sl.id === id ? { ...sl, ...patch } : sl)),
         })),
+
+      addOverlay: (slideId, overlay) =>
+        set((s) => ({
+          slides: s.slides.map((sl) => {
+            if (sl.id !== slideId) return sl
+            const overlays = [...(sl.overlays ?? []), overlay]
+            if (overlays.length > 8) overlays.pop()
+            return { ...sl, overlays }
+          }),
+          activeOverlayId: overlay.id,
+        })),
+
+      removeOverlay: (slideId, overlayId) =>
+        set((s) => ({
+          slides: s.slides.map((sl) => {
+            if (sl.id !== slideId) return sl
+            return { ...sl, overlays: (sl.overlays ?? []).filter((o) => o.id !== overlayId) }
+          }),
+          activeOverlayId: s.activeOverlayId === overlayId ? null : s.activeOverlayId,
+        })),
+
+      updateOverlay: (slideId, overlayId, patch) =>
+        set((s) => ({
+          slides: s.slides.map((sl) => {
+            if (sl.id !== slideId) return sl
+            return {
+              ...sl,
+              overlays: (sl.overlays ?? []).map((o) =>
+                o.id === overlayId ? { ...o, ...patch } : o
+              ),
+            }
+          }),
+        })),
+
+      setActiveOverlayId: (id) => set({ activeOverlayId: id }),
 
       reorderSlides: (from, to) =>
         set((s) => {

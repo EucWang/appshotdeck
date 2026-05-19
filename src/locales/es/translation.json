@@ -24,7 +24,8 @@
       "frame": "Marco",
       "background": "Fondo",
       "text": "Texto",
-      "style": "Estilo"
+      "style": "Estilo",
+      "overlay": "Iconos"
     }
   },
   "upload": {
@@ -131,5 +132,23 @@
   },
   "canvas": {
     "upload_prompt": "Sube una captura"
+  },
+  "overlay": {
+    "title": "Iconos superpuestos",
+    "upload": "Subir imagen",
+    "presets": "Predefinidos",
+    "list": "Iconos añadidos",
+    "max_reached": "Máximo 8 iconos",
+    "add_preset": "Clic para añadir",
+    "position_x": "Posición X",
+    "position_y": "Posición Y",
+    "scale": "Escala",
+    "rotate": "Rotación",
+    "opacity": "Opacidad",
+    "delete": "Eliminar",
+    "empty": "Sin iconos aún",
+    "drop_title": "Arrastra un icono aquí",
+    "drop_subtitle": "o haz clic para buscar",
+    "compressing": "Comprimiendo…"
   }
 }

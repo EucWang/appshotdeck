@@ -1,18 +1,19 @@
 import { useState } from 'react'
-import { Upload, Smartphone, Image, Type, Monitor, Palette } from 'lucide-react'
+import { Upload, Smartphone, Image, Type, Monitor, Palette, Sticker } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { UploadPanel } from './UploadPanel'
 import { FramePanel } from './FramePanel'
 import { StylePanel } from './StylePanel'
 import { BackgroundPanel } from './BackgroundPanel'
 import { TextPanel } from './TextPanel'
+import { OverlayPanel } from './OverlayPanel'
 import { SlideStrip } from '../SlideStrip'
 import { useEditorStore } from '../../store/useEditorStore'
 import { defaultFrameForFormat } from '../../store/useEditorStore'
 import { framesForFormat } from '../../data/frames'
 import type { SlideFormat } from '../../types'
 
-type Tab = 'upload' | 'frame' | 'style' | 'background' | 'text'
+type Tab = 'upload' | 'frame' | 'style' | 'background' | 'text' | 'overlay'
 type Platform = 'android' | 'ios'
 
 export function Sidebar() {
@@ -28,6 +29,7 @@ export function Sidebar() {
     { id: 'style',      label: t('sidebar.tabs.style'),      icon: <Palette className="w-4 h-4" /> },
     { id: 'background', label: t('sidebar.tabs.background'), icon: <Image className="w-4 h-4" /> },
     { id: 'text',       label: t('sidebar.tabs.text'),       icon: <Type className="w-4 h-4" /> },
+    { id: 'overlay',    label: t('sidebar.tabs.overlay'),    icon: <Sticker className="w-4 h-4" /> },
   ]
 
   const ANDROID_FORMATS: { id: SlideFormat; label: string; sub: string }[] = [
@@ -127,6 +129,7 @@ export function Sidebar() {
         {tab === 'style'      && <StylePanel />}
         {tab === 'background' && <BackgroundPanel />}
         {tab === 'text'       && <TextPanel />}
+        {tab === 'overlay'    && <OverlayPanel />}
       </div>
 
       <SlideStrip />

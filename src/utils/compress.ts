@@ -41,6 +41,42 @@ export function compressBackgroundImage(dataUrl: string): Promise<string> {
   })
 }
 
+export function compressTransparentImage(dataUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onerror = reject
+    img.onload = () => {
+      let { width, height } = img
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+
+      const target = MAX_BYTES * 1.37
+
+      const tryEncode = (w: number, h: number): string => {
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        return canvas.toDataURL('image/png')
+      }
+
+      let result = tryEncode(width, height)
+
+      while (result.length > target && Math.min(width, height) > 64) {
+        width = Math.round(width * 0.8)
+        height = Math.round(height * 0.8)
+        result = tryEncode(width, height)
+      }
+
+      resolve(result)
+    }
+    img.src = dataUrl
+  })
+}
+
 export function compressImage(dataUrl: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()

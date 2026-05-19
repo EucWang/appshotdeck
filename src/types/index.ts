@@ -67,6 +67,16 @@ export interface LayoutPresetDef {
   devices: DeviceSlot[]
 }
 
+export interface OverlayIcon {
+  id: string
+  dataUrl: string | null
+  x: number
+  y: number
+  scale: number
+  rotate: number
+  opacity: number
+}
+
 export interface Slide {
   id: string
   format: SlideFormat
@@ -114,15 +124,21 @@ export interface Slide {
   frameLightIntensity?: number
   showGrid?: boolean
   showSafeArea?: boolean
+  overlays?: OverlayIcon[]
 }
 
 export interface EditorState {
   slides: Slide[]
   activeSlideId: string
+  activeOverlayId: string | null
   addSlide: () => void
   duplicateSlide: (id: string) => void
   removeSlide: (id: string) => void
   setActiveSlide: (id: string) => void
   updateSlide: (id: string, patch: Partial<Slide>) => void
   reorderSlides: (fromIndex: number, toIndex: number) => void
+  addOverlay: (slideId: string, overlay: OverlayIcon) => void
+  removeOverlay: (slideId: string, overlayId: string) => void
+  updateOverlay: (slideId: string, overlayId: string, patch: Partial<OverlayIcon>) => void
+  setActiveOverlayId: (id: string | null) => void
 }

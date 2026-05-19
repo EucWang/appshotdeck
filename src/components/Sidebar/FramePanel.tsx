@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical } from 'lucide-react'
+import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical, Grid3x3, Shield } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import { framesForFormat, frameById } from '../../data/frames'
 import { presetsForCount, presetById } from '../../data/layoutPresets'
@@ -362,11 +362,67 @@ export function FramePanel() {
 
           {isDual ? (
             <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted font-medium">{t('frame.device_position')}</p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => updateSlide(activeSlideId, { showGrid: !(slide.showGrid ?? false) })}
+                    className={`p-1 rounded-md border transition-all ${
+                      slide.showGrid
+                        ? 'bg-indigo-500/25 border-indigo-400 text-indigo-300'
+                        : 'option-idle border'
+                    }`}
+                    title={t('frame.grid')}
+                  >
+                    <Grid3x3 size={14} />
+                  </button>
+                  <button
+                    onClick={() => updateSlide(activeSlideId, { showSafeArea: !(slide.showSafeArea ?? false) })}
+                    className={`p-1 rounded-md border transition-all ${
+                      slide.showSafeArea
+                        ? 'bg-indigo-500/25 border-indigo-400 text-indigo-300'
+                        : 'option-idle border'
+                    }`}
+                    title={t('frame.safe_area')}
+                  >
+                    <Shield size={14} />
+                  </button>
+                </div>
+              </div>
               <DeviceSliders label={t('frame.device_1')} slide={slide} slotIndex={0} format={slide.format} showZoom={isDual} />
               <DeviceSliders label={t('frame.device_2')} slide={slide} slotIndex={1} format={slide.format} showZoom={isDual} />
             </div>
           ) : (
-            <DeviceSliders label="" slide={slide} slotIndex={0} format={slide.format} showZoom={LANDSCAPE_FORMATS.has(slide.format)} />
+            <div className="space-y-1 pt-2">
+              <div className="flex items-center justify-between pr-1">
+                <span className="text-xs text-muted font-medium">{t('frame.device_position')}</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => updateSlide(activeSlideId, { showGrid: !(slide.showGrid ?? false) })}
+                    className={`p-1 rounded-md border transition-all ${
+                      slide.showGrid
+                        ? 'bg-indigo-500/25 border-indigo-400 text-indigo-300'
+                        : 'option-idle border'
+                    }`}
+                    title={t('frame.grid')}
+                  >
+                    <Grid3x3 size={14} />
+                  </button>
+                  <button
+                    onClick={() => updateSlide(activeSlideId, { showSafeArea: !(slide.showSafeArea ?? false) })}
+                    className={`p-1 rounded-md border transition-all ${
+                      slide.showSafeArea
+                        ? 'bg-indigo-500/25 border-indigo-400 text-indigo-300'
+                        : 'option-idle border'
+                    }`}
+                    title={t('frame.safe_area')}
+                  >
+                    <Shield size={14} />
+                  </button>
+                </div>
+              </div>
+              <DeviceSliders label="" slide={slide} slotIndex={0} format={slide.format} showZoom={LANDSCAPE_FORMATS.has(slide.format)} />
+            </div>
           )}
         </>
       )}

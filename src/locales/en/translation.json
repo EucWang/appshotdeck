@@ -46,7 +46,10 @@
     "screens": "Screens",
     "presets": "Layout Presets",
     "device_1": "Device 1",
-    "device_2": "Device 2"
+    "device_2": "Device 2",
+    "device_position": "Device Position",
+    "grid": "Toggle grid",
+    "safe_area": "Toggle safe area"
   },
   "style": {
     "title": "Style",
@@ -119,7 +122,8 @@
     "clear_all_highlights": "All",
     "highlight_applied": "✓ Applied",
     "select_text_hint": "Select text first",
-    "y_offset": "Y Offset"
+    "y_offset": "Y Offset",
+    "x_offset": "X Offset"
   },
   "strip": {
     "duplicate": "Duplicate",

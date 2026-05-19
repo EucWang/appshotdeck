@@ -39,35 +39,44 @@ src/
 ├── App.css                   # Unused Vite boilerplate — safe to delete
 │
 ├── types/
-│   └── index.ts              # Core types: Slide, EditorState, SlideFormat, FrameId, Background, TextPosition
+│   └── index.ts              # Core types: Slide, EditorState, SlideFormat, FrameId, Background, TextPosition,
+│                             #   TextFont, MockupStyle, BorderShape, ShadowMode, TextSpan, ScreenshotSlot,
+│                             #   DeviceSlot, LayoutPresetDef
 │
 ├── store/
-│   ├── useEditorStore.ts     # Zustand store: slides[], activeSlideId, CRUD + reorder
+│   ├── useEditorStore.ts     # Zustand store: slides[], activeSlideId, CRUD + reorder + dual screenshot helpers
 │   └── useThemeStore.ts      # Zustand store: isDark boolean + toggle
 │
 ├── data/
 │   ├── frames.ts             # FrameDef[] — flat CSS frames and 3D WebGL frames with Device3DSpec
-│   └── backgrounds.ts        # Gradient and solid color presets
+│   ├── backgrounds.ts        # Gradient and solid color presets
+│   └── layoutPresets.ts      # LayoutPresetDef[] — 6 layout presets for single/dual screenshot compositions
 │
 ├── components/
 │   ├── Header.tsx            # Top bar: export all, save/load project, language switch, dark mode toggle
 │   ├── SlideStrip.tsx        # Bottom thumbnail strip: add/delete/duplicate/drag-reorder slides
 │   ├── Canvas/
-│   │   ├── SlideCanvas.tsx   # Full-resolution canvas renderer (forwardRef). Branches on frame.device3d
+│   │   ├── SlideCanvas.tsx   # Full-resolution canvas renderer (forwardRef). Branches on frame.device3d,
+│   │   │                    #   supports dual screenshots, mockup styles, text offset, device rotation
 │   │   ├── Device3D.tsx      # Three.js WebGL 3D device shell (ExtrudeGeometry + ShapeGeometry)
-│   │   └── ScreenContent.tsx # Screenshot <img> or placeholder text inside device frame
+│   │   └── ScreenContent.tsx # Screenshot <img> or placeholder, interactive zoom (wheel) + pan (drag)
 │   └── Sidebar/
-│       ├── Sidebar.tsx       # Platform (Android/iOS) + format picker + tab navigation
-│       ├── UploadPanel.tsx   # Image upload with drag-drop + compress
-│       ├── FramePanel.tsx    # Frame selection + position/size/tilt sliders
-│       ├── BackgroundPanel.tsx # Gradient/solid presets + custom color picker
-│       └── TextPanel.tsx     # Headline/subtitle text, color, visibility toggle
+│       ├── Sidebar.tsx       # Platform (Android/iOS) + format picker + 5-tab navigation
+│       ├── UploadPanel.tsx   # Image upload with drag-drop + compress + screenshot zoom/pan sliders
+│       ├── FramePanel.tsx    # Frame selection + position/size/rotation sliders + layout presets (single/dual)
+│       ├── StylePanel.tsx    # Mockup style presets (8) + border shape/radius/width/color + shadow + opacity + light
+│       ├── BackgroundPanel.tsx # Gradient/solid/image presets + custom color picker + image overlay/blur/frosted
+│       └── TextPanel.tsx     # Headline/subtitle: text, color, font family/size/weight/italic, highlight, offset, visibility
 │
 ├── utils/
-│   ├── compress.ts           # Image compression: max 2048px, JPEG quality 0.88→0.3, ~900KB cap
+│   ├── compress.ts           # Image compression: max 2048px, JPEG quality 0.88→0.3, ~900KB cap + background image compress
 │   ├── export.ts             # Single slide export or batch ZIP export with WebGL compositing
-│   ├── project.ts            # Save/load project as ZIP (config.json + images/*.png)
-│   └── richtext.tsx          # TextSpan rendering: renderColoredText, applySpan, clearSpanRange, adjustSpansOnTextChange
+│   ├── project.ts            # Save/load project as ZIP (config.json + images/*.png), version 2
+│   ├── richtext.tsx          # TextSpan rendering: renderColoredText, applySpan, clearSpanRange, adjustSpansOnTextChange
+│   ├── mockupStyle.ts        # Mockup CSS generator: computeRadius, computeShadow, computeAdaptiveShadow,
+│   │                         #   getBezelLightColor, getMockupFrameCSS
+│   └── fonts.ts              # Font utilities: resolveFontFamily, getSystemFonts (queryLocalFonts API),
+│                             #   isFreeCommercial (100+ fonts validated)
 │
 └── locales/
     ├── en/translation.json   # English strings
@@ -84,7 +93,12 @@ src/
 - `defaultSlide(format)` creates a new slide with format-appropriate defaults
 - **Always use `?? defaultValue` fallbacks** when reading new fields — old persisted slides lack newer properties
 
-Key Slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl`, `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`, `headlineSpans`, `subtitleSpans`, `headlineHighlightColor`, `subtitleHighlightColor`
+**Dual screenshot helpers:**
+- `screenshotSlotFromSlide(slide)` — extracts `ScreenshotSlot` from legacy single-screenshot fields
+- `deviceSlotFromSlide(slide)` — extracts `DeviceSlot` from legacy single-device fields
+- `toggleScreenshotCount(slide, count)` — switches between 1 and 2 screenshots, migrating data
+
+Key Slide fields: `format`, `frame`, `frameTilt`, `screenshotDataUrl`, `background`, `headline`, `subtitle`, `textColor`, `subtitleColor`, `textPosition`, `deviceOffset`, `deviceScale`, `showHeadline`, `showSubtitle`, `headlineSpans`, `subtitleSpans`, `headlineHighlightColor`, `subtitleHighlightColor`, `headlineFontSize`, `subtitleFontSize`, `textFontFamily`, `headlineFontWeight`, `subtitleFontWeight`, `headlineItalic`, `subtitleItalic`, `textOffsetY`, `screenshotZoom`, `screenshotOffsetX`, `screenshotOffsetY`, `screenshotCount`, `slots`, `deviceSlots`, `activePresetId`, `deviceRotate`, `mockupStyle`, `borderShape`, `borderRadius`, `borderWidth`, `borderColor`, `shadowMode`, `mockupOpacity`, `frameLightIntensity`
 
 ### Frame System (`src/data/frames.ts`)
 
@@ -96,10 +110,14 @@ Two frame types, distinguished by `device3d` on `FrameDef`:
 ### SlideCanvas (`src/components/Canvas/SlideCanvas.tsx`)
 
 - Always renders at full export resolution. CSS `transform: scale()` shrinks for preview
+- Supports both single and dual screenshot rendering via `screenshotCount` + `slots[]`/`deviceSlots[]`
 - `vbW` = viewBox width from `frameViewBox` string — converts outerRx/bezelWidth from viewBox units to pixels
 - `deviceScaleFactor = (slide.deviceScale ?? 100) / 100` — scales slot dimensions uniformly
 - Portrait device Y: `Math.round((H - dSlotH) / 2) + Math.round(H * deviceOffset / 100)`. 0 = canvas center, +30 = default
 - Landscape device X: same center-based formula. 0 = center, +16 = default
+- Applies mockup styles via `getMockupFrameCSS()` — border, shadow, opacity, glass effects
+- Text rendering supports rich text spans, font family/size/weight/italic, and `textOffsetY`
+- Device rotation applied via CSS `transform: rotate()` on the device wrapper
 
 ### Device3D (`src/components/Canvas/Device3D.tsx`)
 
@@ -125,6 +143,47 @@ Two frame types, distinguished by `device3d` on `FrameDef`:
 - JPEG quality starts at 0.88, steps down to 0.3
 - Target: ~900KB per image base64 (~7.2MB theoretical max for 8 slides)
 
+### Dual Screenshot System
+
+- Each slide supports 1 or 2 screenshots via `screenshotCount` (1 | 2)
+- `slots: ScreenshotSlot[]` — per-slot image data, zoom, and pan offsets
+- `deviceSlots: DeviceSlot[]` — per-slot device position, scale, and rotation
+- `activePresetId` — references a `LayoutPresetDef` from `layoutPresets.ts`
+- Store helpers `switchToDual()` / `switchToSingle()` (private) migrate data between modes
+- Layout presets (6): `single-center`, `single-low`, `duo-side`, `duo-stack`, `duo-front-back`, `duo-tilt`
+- `FramePanel` shows preset thumbnails and toggles between 1/2 screenshot mode
+
+### Mockup Style System (`src/utils/mockupStyle.ts`)
+
+- 8 style presets: `default`, `glass-light`, `glass-dark`, `liquid-glass`, `inset-light`, `inset-dark`, `outline`, `border`
+- Border controls: `borderShape` (sharp/curved/round), `borderRadius`, `borderWidth`, `borderColor`
+- Shadow modes: `none`, `spread`, `hug`, `adaptive` (brightness-based)
+- `getMockupFrameCSS(slide, bgBrightness)` returns the full CSS properties object
+- `getBezelLightColor(baseColor, intensity)` adjusts bezel highlight by `frameLightIntensity`
+- `mockupOpacity` (0–100) applied as CSS opacity on the device wrapper
+
+### ScreenContent (`src/components/Canvas/ScreenContent.tsx`)
+
+- Renders screenshot `<img>` with zoom/pan transforms, or a placeholder when no image
+- **Interactive zoom**: mouse wheel changes `screenshotZoom` (100–400%, 10% steps)
+- **Interactive pan**: drag-to-pan when zoomed >100%, constrained to valid range
+- Pan values stored as percentages of slot dimensions (`screenshotOffsetX/Y`)
+- Updates store directly via `updateSlide` for immediate feedback
+
+### Font System (`src/utils/fonts.ts`)
+
+- `resolveFontFamily(font)` — returns CSS font-family string; `'default'` → Inter, `'system'` → system-ui stack
+- `getSystemFonts()` — async, uses browser `queryLocalFonts()` API (requires user permission)
+- `isFreeCommercial(fontName)` — checks against a curated set of 100+ pre-installed fonts known to be free for commercial use
+- Covers Windows, macOS, Linux, and Google Fonts pre-installed on ChromeOS
+
+### Enhanced Background System
+
+- Three background types: `solid`, `gradient`, `image`
+- Image backgrounds support: `overlayColor`, `overlayOpacity` (0–100%), `blur` (0–20px), `frosted` (0–100% noise texture)
+- `compressBackgroundImage()` — separate compression targeting ~400KB for backgrounds
+- BackgroundPanel shows image upload with drag-drop, replace on hover, and overlay/blur/frosted sliders
+
 ## Format Configurations
 
 | Format | Canvas W×H | Slot W×H | ViewBox W | Orientation |
@@ -133,8 +192,8 @@ Two frame types, distinguished by `device3d` on `FrameDef`:
 | iphone-69 | 1320×2868 | 990×2148 | 393 | Portrait |
 | iphone-65 | 1242×2688 | 930×2020 | 393 | Portrait |
 | ipad-13 | 2048×2732 | 1440×1897 | 820 | Portrait |
-| tablet-7 | 1920×1080 | 1000×625 | 960 | Landscape |
-| tablet-10 | 2560×1440 | 1360×850 | 960 | Landscape |
+| tablet-7 | 1920×1080 | 425×918 | 390 | Landscape |
+| tablet-10 | 2560×1440 | 566×1224 | 390 | Landscape |
 
 ## Conventions
 

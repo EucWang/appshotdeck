@@ -46,7 +46,10 @@
     "screens": "Pantallas",
     "presets": "Diseños predefinidos",
     "device_1": "Dispositivo 1",
-    "device_2": "Dispositivo 2"
+    "device_2": "Dispositivo 2",
+    "device_position": "Posición del dispositivo",
+    "grid": "Cuadrícula",
+    "safe_area": "Área segura"
   },
   "style": {
     "title": "Estilo",
@@ -119,7 +122,8 @@
     "clear_all_highlights": "Todo",
     "highlight_applied": "✓ Aplicado",
     "select_text_hint": "Selecciona texto primero",
-    "y_offset": "Desplazamiento Y"
+    "y_offset": "Desplazamiento Y",
+    "x_offset": "Desplazamiento X"
   },
   "strip": {
     "duplicate": "Duplicar",

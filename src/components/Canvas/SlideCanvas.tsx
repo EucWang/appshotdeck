@@ -95,6 +95,71 @@ function BackgroundLayers({ bg }: { bg: Slide['background'] }) {
   )
 }
 
+function GridOverlay({ W, H, bright }: { W: number; H: number; bright: number }) {
+  const thin = bright > 0.5 ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'
+  const ruleThird = bright > 0.5 ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.18)'
+  const center = bright > 0.5 ? 'rgba(0,0,0,0.32)' : 'rgba(255,255,255,0.32)'
+
+  return (
+    <svg
+      width={W}
+      height={H}
+      style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}
+    >
+      {Array.from({ length: 9 }, (_, i) => {
+        const pct = (i + 1) / 10
+        return (
+          <g key={i}>
+            <line x1={0} y1={Math.round(H * pct)} x2={W} y2={Math.round(H * pct)} stroke={thin} strokeWidth={1} />
+            <line x1={Math.round(W * pct)} y1={0} x2={Math.round(W * pct)} y2={H} stroke={thin} strokeWidth={1} />
+          </g>
+        )
+      })}
+      {[1, 2].map((n) => {
+        const pct = n / 3
+        return (
+          <g key={`t${n}`}>
+            <line x1={0} y1={Math.round(H * pct)} x2={W} y2={Math.round(H * pct)} stroke={ruleThird} strokeWidth={2} />
+            <line x1={Math.round(W * pct)} y1={0} x2={Math.round(W * pct)} y2={H} stroke={ruleThird} strokeWidth={2} />
+          </g>
+        )
+      })}
+      <line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke={center} strokeWidth={2} strokeDasharray="12 6" />
+      <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke={center} strokeWidth={2} strokeDasharray="12 6" />
+    </svg>
+  )
+}
+
+function SafeAreaOverlay({ W, H, bright }: { W: number; H: number; bright: number }) {
+  const margin = 0.10
+  const dangerFill = bright > 0.5 ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'
+  const dangerStroke = bright > 0.5 ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)'
+  const labelFill = bright > 0.5 ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.45)'
+
+  const mx = Math.round(W * margin)
+  const my = Math.round(H * margin)
+
+  return (
+    <svg
+      width={W}
+      height={H}
+      style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}
+    >
+      <rect x={0} y={0} width={mx} height={H} fill={dangerFill} />
+      <rect x={W - mx} y={0} width={mx} height={H} fill={dangerFill} />
+      <rect x={mx} y={0} width={W - 2 * mx} height={my} fill={dangerFill} />
+      <rect x={mx} y={H - my} width={W - 2 * mx} height={my} fill={dangerFill} />
+      <rect
+        x={mx} y={my} width={W - 2 * mx} height={H - 2 * my}
+        fill="none" stroke={dangerStroke} strokeWidth={2} strokeDasharray="10 5"
+      />
+      <text x={mx + 6} y={my + 14} fontSize={12} fill={labelFill} fontFamily="sans-serif">
+        Safe Area
+      </text>
+    </svg>
+  )
+}
+
 function bgBrightness(slide: Slide): number {
   const bg = slide.background
   if (bg.type === 'solid') {
@@ -389,6 +454,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const headlineItalic = slide.headlineItalic ?? false
     const subtitleItalic = slide.subtitleItalic ?? false
     const textOffsetPx = Math.round(H * ((slide.textOffsetY ?? 0) / 100))
+    const textOffsetXPx = Math.round(W * ((slide.textOffsetX ?? 0) / 100))
 
     const devSlot0 = isDual
       ? (slide.deviceSlots?.[0] ?? { deviceOffset: 0, deviceScale: 78, deviceRotate: 0 })
@@ -416,13 +482,14 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           <div
             style={{
               position: 'absolute',
-              left: Math.round(W * 0.05),
+              left: Math.round(W * 0.05) + textOffsetXPx,
               top: 0,
               width: Math.round(W * 0.23),
               height: H,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
+              transform: `translateY(${textOffsetPx}px)`,
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
@@ -446,6 +513,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
                 ? Math.round(H * 0.055) + textOffsetPx
                 : slotY0 + dSlotH0 + Math.round(H * 0.03) + textOffsetPx,
               textAlign: 'center',
+              transform: `translateX(${textOffsetXPx}px)`,
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
@@ -468,6 +536,13 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           </>
         ) : (
           <DeviceFrame slide={slide} fmt={fmt} slotIndex={0} interactive={interactive} />
+        )}
+
+        {(slide.showGrid ?? false) && interactive && (
+          <GridOverlay W={W} H={H} bright={bgBrightness(slide)} />
+        )}
+        {(slide.showSafeArea ?? false) && interactive && (
+          <SafeAreaOverlay W={W} H={H} bright={bgBrightness(slide)} />
         )}
       </div>
     )

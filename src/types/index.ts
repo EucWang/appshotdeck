@@ -99,6 +99,7 @@ export interface Slide {
   screenshotOffsetX?: number
   screenshotOffsetY?: number
   textOffsetY?: number
+  textOffsetX?: number
   screenshotCount?: 1 | 2
   slots?: ScreenshotSlot[]
   deviceSlots?: DeviceSlot[]
@@ -111,6 +112,8 @@ export interface Slide {
   shadowMode?: ShadowMode
   mockupOpacity?: number
   frameLightIntensity?: number
+  showGrid?: boolean
+  showSafeArea?: boolean
 }
 
 export interface EditorState {

@@ -7,8 +7,10 @@ import type { ScreenshotSlot, Slide } from '../../types'
 
 function SingleUpload() {
   const { t } = useTranslation()
-  const { activeSlideId, updateSlide } = useEditorStore()
+  const { slides, activeSlideId, updateSlide } = useEditorStore()
+  const slide = slides.find((s) => s.id === activeSlideId)
   const [compressing, setCompressing] = useState(false)
+  const screenshotDataUrl = slide?.screenshotDataUrl ?? null
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -47,13 +49,24 @@ function SingleUpload() {
     <label
       onDrop={onDrop}
       onDragOver={(e) => e.preventDefault()}
-      className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-black/20 dark:border-white/20 rounded-xl p-8 cursor-pointer hover:border-indigo-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+      className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-xl p-8 cursor-pointer hover:border-indigo-400 transition-colors ${
+        screenshotDataUrl
+          ? 'border-indigo-400/40 bg-indigo-500/5 dark:bg-indigo-500/10'
+          : 'border-black/20 dark:border-white/20 hover:bg-black/5 dark:hover:bg-white/5'
+      }`}
     >
       {compressing ? (
         <>
           <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
           <p className="text-sm text-black/50 dark:text-white/50">{t('upload.compressing')}</p>
         </>
+      ) : screenshotDataUrl ? (
+        <div className="w-full aspect-video rounded-lg overflow-hidden relative group">
+          <img src={screenshotDataUrl} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <p className="text-xs text-white font-medium">{t('upload.replace_image')}</p>
+          </div>
+        </div>
       ) : (
         <>
           <Upload className="w-8 h-8 text-muted" />

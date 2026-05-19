@@ -77,7 +77,11 @@
     "shadow_adaptive": "Adaptive",
     "opacity": "Opacity",
     "adjust_light": "Adjust Light",
-    "reset": "Reset"
+    "reset": "Reset",
+    "filters": "Screenshot Filters",
+    "brightness": "Brightness",
+    "contrast": "Contrast",
+    "saturation": "Saturation"
   },
   "background": {
     "gradients": "Gradients",

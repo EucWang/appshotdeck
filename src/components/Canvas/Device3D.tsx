@@ -160,9 +160,12 @@ interface Props {
   shadowPercentX?: number
   shadowPercentY?: number
   shadowMode?: ShadowMode
+  brightness?: number
+  contrast?: number
+  saturation?: number
 }
 
-export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotDataUrl, mockupOpacity = 100, shadowPercentX = 0, shadowPercentY = -20, shadowMode = 'spread' }: Props) {
+export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotDataUrl, mockupOpacity = 100, shadowPercentX = 0, shadowPercentY = -20, shadowMode = 'spread', brightness = 100, contrast = 100, saturation = 100 }: Props) {
   const aspect       = slotH / slotW
   const bezelN       = (spec.bezelWidth * (slotW / vbW)) / slotW
   const outerCornerR = spec.outerRx / vbW   // model units — matches android-flat outerRx
@@ -191,9 +194,17 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotData
     }
   })()
 
+  const screenshotFilter = brightness !== 100 || contrast !== 100 || saturation !== 100
+    ? `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`
+    : ''
+
+  const combinedFilter = screenshotFilter
+    ? `${screenshotFilter} ${dropShadow}`
+    : dropShadow
+
   return (
     <Canvas
-      style={{ position: 'absolute', inset: 0, filter: dropShadow, opacity: mockupOpacity / 100 }}
+      style={{ position: 'absolute', inset: 0, filter: combinedFilter, opacity: mockupOpacity / 100 }}
       camera={{ position: [0, 0, cameraZ], fov, near: 0.01, far: 100 }}
       gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
       flat

@@ -44,6 +44,9 @@ const defaultSlide = (format: SlideFormat = 'phone'): Slide => ({
   mockupOpacity: 100,
   shadowPercentX: 0,
   shadowPercentY: -20,
+  screenshotBrightness: 100,
+  screenshotContrast: 100,
+  screenshotSaturation: 100,
   overlays: [],
 })
 

@@ -71,6 +71,9 @@ export function StylePanel() {
   const mockupOpacity = slide.mockupOpacity ?? 100
   const shadowPX = slide.shadowPercentX ?? 0
   const shadowPY = slide.shadowPercentY ?? -20
+  const sBrightness = slide.screenshotBrightness ?? 100
+  const sContrast = slide.screenshotContrast ?? 100
+  const sSaturation = slide.screenshotSaturation ?? 100
 
   return (
     <div className="p-4 space-y-5">
@@ -237,6 +240,46 @@ export function StylePanel() {
             />
           </div>
         )}
+      </div>
+
+      {/* Section 6: Screenshot Filters */}
+      <div>
+        <p className="text-xs text-muted uppercase tracking-wider mb-2">{t('style.filters')}</p>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 pr-1">
+            <span className="text-xs text-muted w-14 flex-shrink-0">{t('style.brightness')}</span>
+            <input
+              type="range" min={0} max={200} step={1} value={sBrightness}
+              onChange={(e) => patch({ screenshotBrightness: Number(e.target.value) })}
+              className="flex-1 min-w-0"
+            />
+            <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{sBrightness}%</span>
+          </div>
+          <div className="flex items-center gap-2 pr-1">
+            <span className="text-xs text-muted w-14 flex-shrink-0">{t('style.contrast')}</span>
+            <input
+              type="range" min={0} max={200} step={1} value={sContrast}
+              onChange={(e) => patch({ screenshotContrast: Number(e.target.value) })}
+              className="flex-1 min-w-0"
+            />
+            <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{sContrast}%</span>
+          </div>
+          <div className="flex items-center gap-2 pr-1">
+            <span className="text-xs text-muted w-14 flex-shrink-0">{t('style.saturation')}</span>
+            <input
+              type="range" min={0} max={200} step={1} value={sSaturation}
+              onChange={(e) => patch({ screenshotSaturation: Number(e.target.value) })}
+              className="flex-1 min-w-0"
+            />
+            <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{sSaturation}%</span>
+          </div>
+        </div>
+        <button
+          onClick={() => patch({ screenshotBrightness: 100, screenshotContrast: 100, screenshotSaturation: 100 })}
+          className="mt-2 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+        >
+          {t('style.reset')}
+        </button>
       </div>
     </div>
   )

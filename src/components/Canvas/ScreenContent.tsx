@@ -12,6 +12,9 @@ interface Props {
   screenshotOffsetX: number
   screenshotOffsetY: number
   slotIndex?: number
+  brightness?: number
+  contrast?: number
+  saturation?: number
 }
 
 function clampPan(v: number, max: number) {
@@ -28,6 +31,9 @@ export function ScreenContent({
   screenshotOffsetX,
   screenshotOffsetY,
   slotIndex,
+  brightness = 100,
+  contrast = 100,
+  saturation = 100,
 }: Props) {
   const { t } = useTranslation()
   const [isDragging, setIsDragging] = useState(false)
@@ -233,6 +239,10 @@ export function ScreenContent({
         transform:
           zoomFactor !== 1 || panXPx !== 0 || panYPx !== 0
             ? `translate(${panXPx}px, ${panYPx}px) scale(${zoomFactor})`
+            : undefined,
+        filter:
+          brightness !== 100 || contrast !== 100 || saturation !== 100
+            ? `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`
             : undefined,
         cursor: zoomFactor > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
       }}

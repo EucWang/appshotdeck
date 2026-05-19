@@ -378,6 +378,10 @@ function DeviceFrame({
   const slotX = slotX_center + (landscape ? offsetPx : offsetXPx)
   const slotY = slotY_center + (landscape ? offsetXPx : offsetPx)
 
+  const sBrightness = slide.screenshotBrightness ?? 100
+  const sContrast = slide.screenshotContrast ?? 100
+  const sSaturation = slide.screenshotSaturation ?? 100
+
   const screenContentProps = {
     screenshotDataUrl,
     slotW: dSlotW,
@@ -388,6 +392,9 @@ function DeviceFrame({
     screenshotOffsetX,
     screenshotOffsetY,
     slotIndex,
+    brightness: sBrightness,
+    contrast: sContrast,
+    saturation: sSaturation,
   }
 
   return (
@@ -417,6 +424,9 @@ function DeviceFrame({
           shadowPercentX={slide.shadowPercentX ?? 0}
           shadowPercentY={slide.shadowPercentY ?? -20}
           shadowMode={slide.shadowMode ?? 'spread'}
+          brightness={sBrightness}
+          contrast={sContrast}
+          saturation={sSaturation}
         />
       ) : (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>

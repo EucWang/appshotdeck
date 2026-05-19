@@ -77,7 +77,11 @@
     "shadow_adaptive": "Adaptativa",
     "opacity": "Opacidad",
     "adjust_light": "Ajustar Luz",
-    "reset": "Restablecer"
+    "reset": "Restablecer",
+    "filters": "Filtros de captura",
+    "brightness": "Brillo",
+    "contrast": "Contraste",
+    "saturation": "Saturación"
   },
   "background": {
     "gradients": "Degradados",

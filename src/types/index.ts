@@ -123,6 +123,9 @@ export interface Slide {
   mockupOpacity?: number
   shadowPercentX?: number
   shadowPercentY?: number
+  screenshotBrightness?: number
+  screenshotContrast?: number
+  screenshotSaturation?: number
   showGrid?: boolean
   showSafeArea?: boolean
   overlays?: OverlayIcon[]

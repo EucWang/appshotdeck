@@ -55,7 +55,9 @@ export async function saveProject(slides: Slide[]): Promise<void> {
       let jsonBg: JsonBackground = background
       if (background.type === 'image') {
         const bgBase64 = background.dataUrl.split(',')[1]
-        const bgFilename = `bg-${idx + 1}.jpg`
+        const mimeMatch = background.dataUrl.match(/^data:(image\/\w+);/)
+        const ext = mimeMatch?.[1] === 'image/png' ? 'png' : 'jpg'
+        const bgFilename = `bg-${idx + 1}.${ext}`
         images.file(bgFilename, bgBase64, { base64: true })
         jsonBg = { ...background, dataUrl: `images/${bgFilename}` }
       }
@@ -138,9 +140,11 @@ export async function loadProject(file: File): Promise<LoadedProject> {
         const bgImgFile = zip.file(entry.background.dataUrl)
         if (bgImgFile) {
           const bgBase64 = await bgImgFile.async('base64')
+          const bgExt = bgImgFile.name.split('.').pop() ?? 'png'
+          const bgMime = bgExt === 'jpg' || bgExt === 'jpeg' ? 'image/jpeg' : 'image/png'
           background = {
             type: 'image',
-            dataUrl: `data:image/jpeg;base64,${bgBase64}`,
+            dataUrl: `data:${bgMime};base64,${bgBase64}`,
             overlayColor: entry.background.overlayColor ?? '#000000',
             overlayOpacity: entry.background.overlayOpacity ?? 40,
             blur: entry.background.blur ?? 0,

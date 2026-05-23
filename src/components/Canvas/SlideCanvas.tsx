@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useRef, useState } from 'react'
+import { forwardRef, useCallback, useMemo, useRef, useState } from 'react'
 import type { DeviceSlot, OverlayIcon, Slide, SlideFormat } from '../../types'
 import { frameById } from '../../data/frames'
 import { resolveFontFamily } from '../../utils/fonts'
@@ -319,6 +319,8 @@ function DeviceFrame({
 }) {
   const { W, H, slotW, slotH, landscape, frameViewBox } = fmt
   const frame = frameById(slide.frame)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const bgBright = useMemo(() => bgBrightness(slide), [slide.background])
 
   const isDual = (slide.screenshotCount ?? 1) === 2
   let devSlot: DeviceSlot
@@ -336,8 +338,8 @@ function DeviceFrame({
     screenshotOffsetY = sSlot?.screenshotOffsetY ?? 0
   } else {
     devSlot = {
-      deviceOffset: slide.deviceOffset,
-      deviceScale: slide.deviceScale,
+      deviceOffset: slide.deviceOffset ?? 30,
+      deviceScale: slide.deviceScale ?? 100,
       deviceRotate: slide.deviceRotate ?? 0,
     }
     screenshotDataUrl = slide.screenshotDataUrl
@@ -417,7 +419,7 @@ function DeviceFrame({
           slotW={dSlotW}
           slotH={dSlotH}
           vbW={vbW}
-          tilt={slide.frameTilt}
+          tilt={slide.frameTilt ?? 0}
           rotate={devSlot.deviceRotate}
           screenshotDataUrl={screenshotDataUrl}
           mockupOpacity={slide.mockupOpacity ?? 100}
@@ -434,7 +436,7 @@ function DeviceFrame({
             (() => {
               const bezelColor = frame.bezel!.color
               const shadowCSS = shadowMode === 'adaptive'
-                ? computeAdaptiveShadow(bgBrightness(slide), shadowPX, shadowPY)
+                ? computeAdaptiveShadow(bgBright, shadowPX, shadowPY)
                 : computeShadow(shadowMode, shadowPX, shadowPY)
 
               if (isGlass) {
@@ -502,7 +504,7 @@ function DeviceFrame({
           ) : (
             (() => {
               const shadowCSS = shadowMode === 'adaptive'
-                ? computeAdaptiveShadow(bgBrightness(slide), shadowPX, shadowPY)
+                ? computeAdaptiveShadow(bgBright, shadowPX, shadowPY)
                 : computeShadow(shadowMode, shadowPX, shadowPY)
 
               if (isGlass) {
@@ -573,11 +575,20 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const fmt = FORMAT[slide.format]
     const { W, H, landscape } = fmt
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const bgBright = useMemo(() => bgBrightness(slide), [slide.background])
+
     const isDual = (slide.screenshotCount ?? 1) === 2
     const interactive = scale !== 1
 
     const headlineSize = slide.headlineFontSize ?? Math.round(W * (landscape ? 0.036 : 0.063))
     const subtitleSize = slide.subtitleFontSize ?? Math.round(W * (landscape ? 0.022 : 0.039))
+
+    const logoTitleSize = slide.logoTitleFontSize ?? Math.round(W * (landscape ? 0.020 : 0.032))
+    const logoTitleWeight = slide.logoTitleFontWeight ?? 700
+    const logoTitleItalic = slide.logoTitleItalic ?? false
+    const logoOffsetXPx = Math.round(W * ((slide.logoTitleOffsetX ?? 0) / 100))
+    const logoOffsetYPx = Math.round(H * ((slide.logoTitleOffsetY ?? 0) / 100))
 
     const textFont = resolveFontFamily(slide.textFontFamily)
     const headlineWeight = slide.headlineFontWeight ?? 700
@@ -586,14 +597,8 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     const subtitleItalic = slide.subtitleItalic ?? false
     const textOffsetPx = Math.round(H * ((slide.textOffsetY ?? 0) / 100))
     const textOffsetXPx = Math.round(W * ((slide.textOffsetX ?? 0) / 100))
-
-    const devSlot0 = isDual
-      ? (slide.deviceSlots?.[0] ?? { deviceOffset: 0, deviceScale: 78, deviceRotate: 0 })
-      : { deviceOffset: slide.deviceOffset, deviceScale: slide.deviceScale, deviceRotate: slide.deviceRotate ?? 0 }
-    const deviceScaleFactor0 = devSlot0.deviceScale / 100
-    const dSlotH0 = Math.round(fmt.slotH * deviceScaleFactor0)
-    const offsetPx0 = Math.round((landscape ? W : H) * (devSlot0.deviceOffset / 100))
-    const slotY0 = Math.round((H - dSlotH0) / 2) + (landscape ? 0 : offsetPx0)
+    const textAlign = slide.textAlign ?? 'center'
+    const alignItems = textAlign === 'left' ? 'flex-start' : textAlign === 'right' ? 'flex-end' : 'center'
 
     return (
       <div
@@ -616,21 +621,22 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               position: 'absolute',
               left: Math.round(W * 0.05) + textOffsetXPx,
               top: 0,
-              width: Math.round(W * 0.23),
+              right: Math.round(W * 0.05),
               height: H,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               transform: `translateY(${textOffsetPx}px)`,
+              alignItems,
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.2, marginBottom: 24, color: slide.textColor, fontFamily: textFont }}>
+              <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.2, marginBottom: 24, color: slide.textColor, fontFamily: textFont, textAlign, maxWidth: '100%', whiteSpace: 'pre-line' }}>
                 {renderColoredText(slide.headline, slide.headlineSpans)}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.5, color: slide.subtitleColor, fontFamily: textFont }}>
+              <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.5, color: slide.subtitleColor, fontFamily: textFont, textAlign, maxWidth: '100%', whiteSpace: 'pre-line' }}>
                 {renderColoredText(slide.subtitle, slide.subtitleSpans)}
               </div>
             )}
@@ -641,23 +647,57 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
               position: 'absolute',
               left: Math.round(W * 0.07),
               right: Math.round(W * 0.07),
-              top: slide.textPosition === 'top'
-                ? Math.round(H * 0.055) + textOffsetPx
-                : slotY0 + dSlotH0 + Math.round(H * 0.03) + textOffsetPx,
-              textAlign: 'center',
-              transform: `translateX(${textOffsetXPx}px)`,
+              top: 0,
+              height: H,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems,
+              transform: `translateY(${textOffsetPx}px) translateX(${textOffsetXPx}px)`,
             }}
           >
             {(slide.showHeadline ?? true) && slide.headline && (
-              <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor, fontFamily: textFont }}>
+              <div style={{ fontSize: headlineSize, fontWeight: headlineWeight, fontStyle: headlineItalic ? 'italic' : 'normal', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: Math.round(H * 0.012), color: slide.textColor, fontFamily: textFont, textAlign, maxWidth: '100%', whiteSpace: 'pre-line' }}>
                 {renderColoredText(slide.headline, slide.headlineSpans)}
               </div>
             )}
             {(slide.showSubtitle ?? true) && slide.subtitle && (
-              <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.45, color: slide.subtitleColor, fontFamily: textFont }}>
+              <div style={{ fontSize: subtitleSize, fontWeight: subtitleWeight, fontStyle: subtitleItalic ? 'italic' : 'normal', lineHeight: 1.45, color: slide.subtitleColor, fontFamily: textFont, textAlign, maxWidth: '100%', whiteSpace: 'pre-line' }}>
                 {renderColoredText(slide.subtitle, slide.subtitleSpans)}
               </div>
             )}
+          </div>
+        )}
+
+        {(slide.showLogoTitle ?? false) && slide.logoTitle && (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              height: H,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+              transform: `translate(${logoOffsetXPx}px, ${logoOffsetYPx}px)`,
+            }}
+          >
+            <div style={{
+              fontSize: logoTitleSize,
+              fontWeight: logoTitleWeight,
+              fontStyle: logoTitleItalic ? 'italic' : 'normal',
+              lineHeight: 1.2,
+              color: slide.logoTitleColor ?? '#ffffff',
+              fontFamily: textFont,
+              textAlign: 'center',
+              whiteSpace: 'pre-line',
+              overflowWrap: 'break-word',
+              maxWidth: '86%',
+            }}>
+              {slide.logoTitle}
+            </div>
           </div>
         )}
 
@@ -671,10 +711,10 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
         )}
 
         {(slide.showGrid ?? false) && interactive && (
-          <GridOverlay W={W} H={H} bright={bgBrightness(slide)} />
+          <GridOverlay W={W} H={H} bright={bgBright} />
         )}
         {(slide.showSafeArea ?? false) && interactive && (
-          <SafeAreaOverlay W={W} H={H} bright={bgBrightness(slide)} />
+          <SafeAreaOverlay W={W} H={H} bright={bgBright} />
         )}
       </div>
     )

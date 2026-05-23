@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../../store/useEditorStore'
 import { BACKGROUND_CATEGORIES } from '../../data/backgrounds'
 import { compressBackgroundImage } from '../../utils/compress'
+import { HexColorInput } from '../HexColorInput'
 import type { Background } from '../../types'
 
 function bgPreviewStyle(bg: Background): React.CSSProperties {
@@ -51,11 +52,12 @@ export function BackgroundPanel() {
     input.click()
   }, [compressing, handleBgImageUpload])
 
+  const [activeCat, setActiveCat] = useState(BACKGROUND_CATEGORIES[0].id)
+
   const slide = slides.find((s) => s.id === activeSlideId)
   if (!slide) return null
 
   const bg = slide.background
-  const [activeCat, setActiveCat] = useState(BACKGROUND_CATEGORIES[0].id)
   const activePresets = BACKGROUND_CATEGORIES.find(c => c.id === activeCat)?.presets ?? []
 
   return (
@@ -131,33 +133,44 @@ export function BackgroundPanel() {
         </div>
 
         {bg.type === 'solid' && (
-          <label className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <input type="color" value={bg.color}
               onChange={(e) => updateSlide(activeSlideId, { background: { type: 'solid', color: e.target.value } })}
               className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
             />
-            <span className="text-sm text-dim font-mono">{bg.color}</span>
-          </label>
+            <HexColorInput
+              value={bg.color}
+              onChange={(hex) => updateSlide(activeSlideId, { background: { type: 'solid', color: hex } })}
+            />
+          </div>
         )}
 
         {bg.type === 'gradient' && (
           <div className="space-y-2">
-            <label className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <input type="color" value={bg.from}
                 onChange={(e) => updateSlide(activeSlideId, { background: { ...bg, from: e.target.value } })}
                 className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
               />
               <span className="text-xs text-muted">{t('background.from')}</span>
-              <span className="text-xs text-dim font-mono ml-auto">{bg.from}</span>
-            </label>
-            <label className="flex items-center gap-3">
+              <HexColorInput
+                value={bg.from}
+                onChange={(hex) => updateSlide(activeSlideId, { background: { ...bg, from: hex } })}
+                className="ml-auto"
+              />
+            </div>
+            <div className="flex items-center gap-3">
               <input type="color" value={bg.to}
                 onChange={(e) => updateSlide(activeSlideId, { background: { ...bg, to: e.target.value } })}
                 className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
               />
               <span className="text-xs text-muted">{t('background.to')}</span>
-              <span className="text-xs text-dim font-mono ml-auto">{bg.to}</span>
-            </label>
+              <HexColorInput
+                value={bg.to}
+                onChange={(hex) => updateSlide(activeSlideId, { background: { ...bg, to: hex } })}
+                className="ml-auto"
+              />
+            </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted w-10">{t('background.angle')}</span>
               <input type="range" min={0} max={360} value={bg.angle}
@@ -186,15 +199,19 @@ export function BackgroundPanel() {
               </button>
             </div>
 
-            <label className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={bg.overlayColor ?? '#000000'}
                 onChange={(e) => updateSlide(activeSlideId, { background: { ...bg, overlayColor: e.target.value } })}
                 className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
               />
+              <HexColorInput
+                value={bg.overlayColor ?? '#000000'}
+                onChange={(hex) => updateSlide(activeSlideId, { background: { ...bg, overlayColor: hex } })}
+              />
               <span className="text-xs text-muted">{t('background.overlay_color')}</span>
-            </label>
+            </div>
 
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted w-14">{t('background.overlay_opacity')}</span>

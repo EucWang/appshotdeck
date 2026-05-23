@@ -5,7 +5,9 @@
     "load": "加载",
     "export_all": "导出 PNG",
     "dark_mode": "切换深色模式",
-    "light_mode": "切换浅色模式"
+    "light_mode": "切换浅色模式",
+    "undo": "撤销 (Ctrl+Z)",
+    "redo": "重做 (Ctrl+Shift+Z)"
   },
   "sidebar": {
     "format": "格式",
@@ -27,7 +29,8 @@
       "style": "样式",
       "overlay": "图标"
     },
-    "apply_to_all": "应用样式到所有幻灯片"
+    "apply_to_all": "应用样式到所有幻灯片",
+    "beta_badge": "Beta"
   },
   "upload": {
     "drop_title": "拖放截图到此处",
@@ -51,7 +54,12 @@
     "device_2": "设备 2",
     "device_position": "设备位置",
     "grid": "网格",
-    "safe_area": "安全区域"
+    "safe_area": "安全区域",
+    "reset_position": "重置",
+    "reset_to_default": "重置为默认值",
+    "reset_size": "重置大小",
+    "reset_rotation": "重置旋转",
+    "reset_tilt": "重置倾斜"
   },
   "style": {
     "title": "样式",
@@ -115,7 +123,6 @@
     "headline_color": "标题颜色",
     "subtitle_color": "副标题颜色",
     "font": "字体",
-    "font_loading": "加载字体中…",
     "font_default": "Inter",
     "font_system": "系统",
     "weight": "字重",
@@ -125,9 +132,6 @@
     "weight_700": "粗体",
     "weight_800": "特粗",
     "weight_900": "超粗",
-    "position": "文字位置",
-    "position_top": "顶部",
-    "position_bottom": "底部",
     "headline_placeholder": "输入主标题…",
     "subtitle_placeholder": "输入副标题…",
     "highlight_color": "高亮",
@@ -135,9 +139,11 @@
     "clear_highlight": "清除",
     "clear_all_highlights": "全部",
     "highlight_applied": "✓ 已应用",
-    "select_text_hint": "请先选择文字",
     "y_offset": "Y 偏移",
-    "x_offset": "X 偏移"
+    "x_offset": "X 偏移",
+    "reset_size": "重置为默认大小",
+    "reset_y_offset": "重置 Y 偏移",
+    "reset_x_offset": "重置 X 偏移"
   },
   "strip": {
     "duplicate": "复制",
@@ -145,6 +151,43 @@
   },
   "canvas": {
     "upload_prompt": "上传截图"
+  },
+  "templates": {
+    "title": "模板库",
+    "button": "模板",
+    "cat_all": "全部",
+    "cat_dark": "深色",
+    "cat_light": "浅色",
+    "cat_vibrant": "鲜艳",
+    "cat_glass": "玻璃",
+    "cat_minimal": "极简",
+    "cat_dual": "双截图",
+    "t_midnight_pro": "午夜蓝调",
+    "t_dark_chrome": "暗色铬银",
+    "t_obsidian_edge": "黑曜石边",
+    "t_deep_space": "深空紫",
+    "t_shadow_play": "暗影游戏",
+    "t_noir": "纯黑",
+    "t_clean_white": "纯净白",
+    "t_soft_gray": "柔灰",
+    "t_warm_cream": "暖奶油",
+    "t_bright_day": "明亮日",
+    "t_sunset_glow": "落日余晖",
+    "t_electric_blue": "电光蓝",
+    "t_rose_gold": "玫瑰金",
+    "t_neon_night": "霓虹夜",
+    "t_aurora": "极光绿",
+    "t_glass_light": "浅色玻璃",
+    "t_glass_dark": "深色玻璃",
+    "t_liquid_crystal": "液态水晶",
+    "t_flat_dark": "扁平暗",
+    "t_flat_light": "扁平亮",
+    "t_outline_dark": "描边暗",
+    "t_outline_light": "描边亮",
+    "t_side_by_side": "并排展示",
+    "t_stacked_light": "浅色堆叠",
+    "t_front_back": "前后景",
+    "t_tilt_duo": "对称倾斜"
   },
   "overlay": {
     "title": "叠加图标",

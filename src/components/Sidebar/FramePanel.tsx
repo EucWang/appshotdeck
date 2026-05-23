@@ -131,7 +131,7 @@ function DeviceSliders({
             }
           }}
           className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-          title="Reset"
+          title={t('frame.reset_position')}
         >
           {PORTRAIT_PHONE_FORMATS.has(format) ? <AlignCenterVertical size={14} /> : <AlignCenterHorizontal size={14} />}
         </button>
@@ -144,7 +144,7 @@ function DeviceSliders({
             }
           }}
           className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-          title="Reset to default"
+          title={t('frame.reset_to_default')}
         >
           <RotateCcw size={14} />
         </button>
@@ -163,7 +163,7 @@ function DeviceSliders({
           <button
             onClick={() => setSlotField('deviceOffsetX', 0)}
             className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title="Reset"
+            title={t('frame.reset_position')}
           >
             <AlignCenterHorizontal size={14} />
           </button>
@@ -180,7 +180,7 @@ function DeviceSliders({
         <button
           onClick={() => setSlotField('deviceScale', 100)}
           className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-          title="Reset size"
+          title={t('frame.reset_size')}
         >
           <RotateCcw size={14} />
         </button>
@@ -196,7 +196,7 @@ function DeviceSliders({
         <button
           onClick={() => setSlotField('deviceRotate', 0)}
           className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-          title="Reset rotation"
+          title={t('frame.reset_rotation')}
         >
           <RotateCcw size={14} />
         </button>
@@ -439,7 +439,7 @@ export function FramePanel() {
           <button
             onClick={() => updateSlide(activeSlideId, { frameTilt: 0 })}
             className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title="Reset tilt"
+            title={t('frame.reset_tilt')}
           >
             <RotateCcw size={14} />
           </button>

@@ -25,6 +25,8 @@ export type Background =
 
 export type TextFont = string
 
+export type TextAlign = 'left' | 'center' | 'right'
+
 export type TextPosition = 'top' | 'bottom'
 
 export type MockupStyle =
@@ -90,6 +92,7 @@ export interface Slide {
   frameTilt: number
   textPosition: TextPosition
   deviceOffset: number
+  deviceOffsetX?: number
   deviceScale: number
   deviceRotate?: number
   showHeadline: boolean
@@ -110,6 +113,7 @@ export interface Slide {
   screenshotOffsetY?: number
   textOffsetY?: number
   textOffsetX?: number
+  textAlign?: TextAlign
   screenshotCount?: 1 | 2
   slots?: ScreenshotSlot[]
   deviceSlots?: DeviceSlot[]
@@ -129,6 +133,14 @@ export interface Slide {
   showGrid?: boolean
   showSafeArea?: boolean
   overlays?: OverlayIcon[]
+  logoTitle?: string
+  showLogoTitle?: boolean
+  logoTitleColor?: string
+  logoTitleFontSize?: number
+  logoTitleFontWeight?: number
+  logoTitleItalic?: boolean
+  logoTitleOffsetX?: number
+  logoTitleOffsetY?: number
 }
 
 export interface EditorState {
@@ -146,4 +158,9 @@ export interface EditorState {
   removeOverlay: (slideId: string, overlayId: string) => void
   updateOverlay: (slideId: string, overlayId: string, patch: Partial<OverlayIcon>) => void
   setActiveOverlayId: (id: string | null) => void
+  loadSlides: (newSlides: Slide[]) => void
+  undo: () => void
+  redo: () => void
+  _undoCount: number
+  _redoCount: number
 }

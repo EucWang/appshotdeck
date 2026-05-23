@@ -1,8 +1,9 @@
-import { useRef, useCallback } from 'react'
-import { Download, Layers, Save, FolderOpen, Globe, Sun, Moon } from 'lucide-react'
+import { useRef, useState, useCallback, useEffect } from 'react'
+import { Download, Layers, Save, FolderOpen, Globe, Sun, Moon, Undo2, Redo2, LayoutGrid } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/useEditorStore'
 import { useThemeStore } from '../store/useThemeStore'
+import { TemplateModal } from './TemplateModal'
 import { exportAll, type ExportEntry } from '../utils/export'
 import { saveProject, loadProject } from '../utils/project'
 
@@ -18,10 +19,31 @@ const LANGS = [
 
 export function Header({ canvasRefs }: Props) {
   const { t, i18n } = useTranslation()
-  const { slides, activeSlideId } = useEditorStore()
+  const slides = useEditorStore((s) => s.slides)
+  const undo = useEditorStore((s) => s.undo)
+  const redo = useEditorStore((s) => s.redo)
+  const canUndo = useEditorStore((s) => s._undoCount > 0)
+  const canRedo = useEditorStore((s) => s._redoCount > 0)
+  const loadSlides = useEditorStore((s) => s.loadSlides)
   const { isDark, toggle: toggleTheme } = useThemeStore()
+  const [showTemplates, setShowTemplates] = useState(false)
   const exporting = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) redo()
+        else undo()
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+        e.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [undo, redo])
 
   const handleExportAll = useCallback(async () => {
     if (exporting.current) return
@@ -49,17 +71,15 @@ export function Header({ canvasRefs }: Props) {
     if (!file) return
     try {
       const { slides: loaded } = await loadProject(file)
-      useEditorStore.setState({
-        slides: loaded,
-        activeSlideId: loaded[0]?.id ?? activeSlideId,
-      })
+      loadSlides(loaded)
     } catch (err) {
       alert(`Could not load project: ${err instanceof Error ? err.message : String(err)}`)
     }
     e.target.value = ''
-  }, [activeSlideId])
+  }, [loadSlides])
 
   return (
+    <>
     <header className="h-14 flex-shrink-0 flex items-center justify-between px-5 surface border-b border-subtle">
       <div className="flex items-center gap-2">
         <Layers className="w-5 h-5 text-indigo-400" />
@@ -97,6 +117,32 @@ export function Header({ canvasRefs }: Props) {
 
         <div className="w-px h-6 bg-black/10 dark:bg-white/15" />
 
+        <button
+          onClick={undo}
+          disabled={!canUndo}
+          className={`p-2 btn-ghost ${!canUndo ? 'opacity-30 pointer-events-none' : ''}`}
+          title={t('header.undo')}
+        >
+          <Undo2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={redo}
+          disabled={!canRedo}
+          className={`p-2 btn-ghost ${!canRedo ? 'opacity-30 pointer-events-none' : ''}`}
+          title={t('header.redo')}
+        >
+          <Redo2 className="w-4 h-4" />
+        </button>
+
+        <button
+          onClick={() => setShowTemplates(true)}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm btn-ghost"
+          title={t('templates.title')}
+        >
+          <LayoutGrid className="w-4 h-4" />
+          <span className="hidden sm:inline">{t('templates.button')}</span>
+        </button>
+
         <button onClick={handleSave} className="flex items-center gap-1.5 px-3 py-2 text-sm btn-ghost">
           <Save className="w-4 h-4" />
           {t('header.save')}
@@ -119,5 +165,7 @@ export function Header({ canvasRefs }: Props) {
         </button>
       </div>
     </header>
+    <TemplateModal open={showTemplates} onClose={() => setShowTemplates(false)} />
+    </>
   )
 }

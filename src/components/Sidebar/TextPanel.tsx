@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff, RotateCcw } from 'lucide-react'
+import { Eye, EyeOff, RotateCcw, AlignLeft, AlignCenter, AlignRight } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
+import { HexColorInput } from '../HexColorInput'
 import { getSystemFonts, isFreeCommercial } from '../../utils/fonts'
 import { renderColoredText, applySpan, clearSpanRange, adjustSpansOnTextChange } from '../../utils/richtext'
 import type { SlideFormat, TextSpan } from '../../types'
@@ -17,6 +18,9 @@ function defaultHeadlineSize(fmt: SlideFormat) {
 }
 function defaultSubtitleSize(fmt: SlideFormat) {
   return Math.round(CANVAS_W[fmt] * (LANDSCAPE.has(fmt) ? 0.022 : 0.039))
+}
+function defaultLogoTitleSize(fmt: SlideFormat) {
+  return Math.round(CANVAS_W[fmt] * (LANDSCAPE.has(fmt) ? 0.020 : 0.032))
 }
 
 const SELECT_CLASS = "w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-indigo-400 transition-colors"
@@ -164,6 +168,10 @@ function HighlightControls({
           onChange={(e) => onHighlightColorChange(e.target.value)}
           className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent flex-shrink-0"
         />
+        <HexColorInput
+          value={highlightColor}
+          onChange={onHighlightColorChange}
+        />
         <div className="flex items-center gap-1 flex-1">
           <button
             onMouseDown={(e) => e.preventDefault()}
@@ -267,6 +275,30 @@ export function TextPanel() {
         {renderFontPicker()}
       </div>
 
+      <div className="space-y-2">
+        <label className="text-xs text-muted uppercase tracking-wider">{t('text.align')}</label>
+        <div className="flex gap-1.5">
+          {([
+            { value: 'left' as const, icon: AlignLeft, key: 'text.align_left' },
+            { value: 'center' as const, icon: AlignCenter, key: 'text.align_center' },
+            { value: 'right' as const, icon: AlignRight, key: 'text.align_right' },
+          ]).map(({ value, icon: Icon, key }) => (
+            <button
+              key={value}
+              onClick={() => updateSlide(activeSlideId, { textAlign: value })}
+              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                (slide.textAlign ?? 'center') === value
+                  ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-400'
+                  : 'option-idle border'
+              }`}
+            >
+              <Icon size={14} />
+              <span>{t(key)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-1">
         <div className="flex items-center justify-between">
           <label className="text-xs text-muted uppercase tracking-wider">{t('text.headline')}</label>
@@ -301,7 +333,7 @@ export function TextPanel() {
           <button
             onClick={() => updateSlide(activeSlideId, { headlineFontSize: undefined })}
             className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title="Reset to default size"
+            title={t('text.reset_size')}
           >
             <RotateCcw size={14} />
           </button>
@@ -358,7 +390,7 @@ export function TextPanel() {
           <button
             onClick={() => updateSlide(activeSlideId, { subtitleFontSize: undefined })}
             className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title="Reset to default size"
+            title={t('text.reset_size')}
           >
             <RotateCcw size={14} />
           </button>
@@ -383,24 +415,30 @@ export function TextPanel() {
 
       <div className="space-y-2">
         <label className="text-xs text-muted uppercase tracking-wider">{t('text.headline_color')}</label>
-        <label className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <input type="color" value={slide.textColor}
             onChange={(e) => updateSlide(activeSlideId, { textColor: e.target.value })}
             className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
           />
-          <span className="text-sm text-dim font-mono">{slide.textColor}</span>
-        </label>
+          <HexColorInput
+            value={slide.textColor}
+            onChange={(hex) => updateSlide(activeSlideId, { textColor: hex })}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
         <label className="text-xs text-muted uppercase tracking-wider">{t('text.subtitle_color')}</label>
-        <label className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <input type="color" value={slide.subtitleColor}
             onChange={(e) => updateSlide(activeSlideId, { subtitleColor: e.target.value })}
             className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
           />
-          <span className="text-sm text-dim font-mono">{slide.subtitleColor}</span>
-        </label>
+          <HexColorInput
+            value={slide.subtitleColor}
+            onChange={(hex) => updateSlide(activeSlideId, { subtitleColor: hex })}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -416,7 +454,7 @@ export function TextPanel() {
           <button
             onClick={() => updateSlide(activeSlideId, { textOffsetY: 0 })}
             className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title="Reset Y offset"
+            title={t('text.reset_y_offset')}
           >
             <RotateCcw size={14} />
           </button>
@@ -426,7 +464,7 @@ export function TextPanel() {
         <label className="text-xs text-muted uppercase tracking-wider">{t('text.x_offset')}</label>
         <div className="flex items-center gap-2">
           <input
-            type="range" min={-15} max={15} value={slide.textOffsetX ?? 0}
+            type="range" min={-50} max={50} value={slide.textOffsetX ?? 0}
             onChange={(e) => updateSlide(activeSlideId, { textOffsetX: Number(e.target.value) })}
             className="flex-1 min-w-0"
           />
@@ -435,11 +473,107 @@ export function TextPanel() {
           <button
             onClick={() => updateSlide(activeSlideId, { textOffsetX: 0 })}
             className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
-            title="Reset X offset"
+            title={t('text.reset_x_offset')}
           >
             <RotateCcw size={14} />
           </button>
         </div>
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-xs text-muted uppercase tracking-wider">{t('text.logo_title')}</label>
+          <button
+            onClick={() => updateSlide(activeSlideId, { showLogoTitle: !slide.showLogoTitle })}
+            className="text-muted hover:text-foreground transition-colors p-0.5"
+            title={slide.showLogoTitle ? 'Hide logo title' : 'Show logo title'}
+          >
+            {slide.showLogoTitle ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+        </div>
+        {slide.showLogoTitle && (
+          <>
+            <textarea
+              value={slide.logoTitle ?? ''}
+              onChange={(e) => updateSlide(activeSlideId, { logoTitle: e.target.value })}
+              rows={1}
+              className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-black/30 dark:placeholder-white/30 resize-none focus:outline-none focus:border-indigo-400 transition-colors"
+              placeholder={t('text.logo_title_placeholder')}
+            />
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs text-muted w-7 flex-shrink-0">Size</span>
+              <input
+                type="range" min={10} max={400} value={slide.logoTitleFontSize ?? defaultLogoTitleSize(slide.format)}
+                onChange={(e) => updateSlide(activeSlideId, { logoTitleFontSize: Number(e.target.value) })}
+                className="flex-1 min-w-0"
+              />
+              <span className="text-xs text-dim font-mono w-8 text-right flex-shrink-0">{slide.logoTitleFontSize ?? defaultLogoTitleSize(slide.format)}px</span>
+              <button
+                onClick={() => updateSlide(activeSlideId, { logoTitleFontSize: undefined })}
+                className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+                title={t('text.reset_logo_size')}
+              >
+                <RotateCcw size={14} />
+              </button>
+            </div>
+            <WeightItalicControls
+              activeWeight={slide.logoTitleFontWeight ?? 700}
+              activeItalic={slide.logoTitleItalic ?? false}
+              onWeightChange={(w) => updateSlide(activeSlideId, { logoTitleFontWeight: w })}
+              onItalicChange={(i) => updateSlide(activeSlideId, { logoTitleItalic: i })}
+              t={t}
+            />
+            <div className="space-y-2">
+              <label className="text-xs text-muted uppercase tracking-wider">{t('text.logo_title_color')}</label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={slide.logoTitleColor ?? '#ffffff'}
+                  onChange={(e) => updateSlide(activeSlideId, { logoTitleColor: e.target.value })}
+                  className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
+                />
+                <HexColorInput
+                  value={slide.logoTitleColor ?? '#ffffff'}
+                  onChange={(hex) => updateSlide(activeSlideId, { logoTitleColor: hex })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-muted uppercase tracking-wider">{t('text.logo_title_offset_x')}</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range" min={-50} max={50} value={slide.logoTitleOffsetX ?? 0}
+                  onChange={(e) => updateSlide(activeSlideId, { logoTitleOffsetX: Number(e.target.value) })}
+                  className="flex-1 min-w-0"
+                />
+                <span className="text-xs text-dim font-mono w-10 text-right flex-shrink-0">{slide.logoTitleOffsetX ?? 0}%</span>
+                <button
+                  onClick={() => updateSlide(activeSlideId, { logoTitleOffsetX: 0 })}
+                  className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+                  title={t('text.reset_logo_offset_x')}
+                >
+                  <RotateCcw size={14} />
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-muted uppercase tracking-wider">{t('text.logo_title_offset_y')}</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range" min={-45} max={45} value={slide.logoTitleOffsetY ?? 0}
+                  onChange={(e) => updateSlide(activeSlideId, { logoTitleOffsetY: Number(e.target.value) })}
+                  className="flex-1 min-w-0"
+                />
+                <span className="text-xs text-dim font-mono w-10 text-right flex-shrink-0">{slide.logoTitleOffsetY ?? 0}%</span>
+                <button
+                  onClick={() => updateSlide(activeSlideId, { logoTitleOffsetY: 0 })}
+                  className="flex-shrink-0 text-muted hover:text-foreground transition-colors p-0.5"
+                  title={t('text.reset_logo_offset_y')}
+                >
+                  <RotateCcw size={14} />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

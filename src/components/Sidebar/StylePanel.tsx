@@ -4,6 +4,7 @@ import { RotateCcw, Sun } from 'lucide-react'
 import { useEditorStore } from '../../store/useEditorStore'
 import type { MockupStyle, BorderShape, ShadowMode, Slide } from '../../types'
 import { LightPad } from './LightPad'
+import { HexColorInput } from '../HexColorInput'
 
 const STYLES: MockupStyle[] = ['default', 'glass-light', 'glass-dark', 'liquid-glass', 'inset-light', 'inset-dark', 'outline', 'border']
 
@@ -161,6 +162,10 @@ export function StylePanel() {
             type="color" value={rgbaToHex(borderColor)}
             onChange={(e) => patch({ borderColor: hexToRgba(e.target.value) })}
             className="w-7 h-7 rounded cursor-pointer border-0 p-0 bg-transparent"
+          />
+          <HexColorInput
+            value={rgbaToHex(borderColor)}
+            onChange={(hex) => patch({ borderColor: hexToRgba(hex) })}
           />
           <button
             onClick={() => patch({ borderColor: 'rgba(255,255,255,0.4)' })}

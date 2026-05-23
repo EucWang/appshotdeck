@@ -4,6 +4,9 @@ import * as THREE from 'three'
 import type { Device3DSpec } from '../../data/frames'
 import type { ShadowMode } from '../../types'
 
+const MODEL_DEPTH = 0.068
+const MODEL_BEVEL = 0.016
+
 /** Parse 'rgba(r,g,b,a)' → ['rgb(r,g,b)', a] for Three.js */
 function parseColor(css: string): [string, number] {
   const m = css.match(/rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)/)
@@ -72,8 +75,8 @@ interface ModelProps {
 function PhoneModel({ spec, aspect, bezelN, outerCornerR, tilt, rotate, screenshotDataUrl }: ModelProps) {
   const W     = 1
   const H     = aspect
-  const depth = 0.068
-  const bevel = 0.016
+  const depth = MODEL_DEPTH
+  const bevel = MODEL_BEVEL
 
   const screenW      = W - bezelN * 2
   const screenH      = H - bezelN * 2
@@ -119,6 +122,10 @@ function PhoneModel({ spec, aspect, bezelN, outerCornerR, tilt, rotate, screensh
     tex.colorSpace = THREE.SRGBColorSpace
     return tex
   }, [screenshotDataUrl])
+
+  useEffect(() => {
+    return () => { if (texture) texture.dispose() }
+  }, [texture])
 
   return (
     <group rotation={[THREE.MathUtils.degToRad(-4), THREE.MathUtils.degToRad(tilt), THREE.MathUtils.degToRad(rotate)]}>
@@ -173,10 +180,8 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotData
   const fov = 28
   // At max tilt the front corner nearest the camera is at z = W/2·sin(t) + depth/2·cos(t).
   // Camera must be far enough that this never exceeds the frustum.
-  const modelDepth = 0.068
-  const modelBevel = 0.016   // must match PhoneModel's bevel constant
   const maxTiltRad = THREE.MathUtils.degToRad(60)
-  const zExcursion = 0.5 * Math.sin(maxTiltRad) + (modelDepth / 2 + modelBevel) * Math.cos(maxTiltRad)
+  const zExcursion = 0.5 * Math.sin(maxTiltRad) + (MODEL_DEPTH / 2 + MODEL_BEVEL) * Math.cos(maxTiltRad)
   const cameraZ    = (aspect / 2) / Math.tan((fov / 2) * (Math.PI / 180)) + zExcursion + 0.05
 
   const lightDistance = Math.sqrt(shadowPercentX * shadowPercentX + shadowPercentY * shadowPercentY)

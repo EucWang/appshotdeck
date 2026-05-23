@@ -5,7 +5,9 @@
     "load": "Cargar",
     "export_all": "Exportar PNGs",
     "dark_mode": "Cambiar a modo oscuro",
-    "light_mode": "Cambiar a modo claro"
+    "light_mode": "Cambiar a modo claro",
+    "undo": "Deshacer (Ctrl+Z)",
+    "redo": "Rehacer (Ctrl+Shift+Z)"
   },
   "sidebar": {
     "format": "Formato",
@@ -27,7 +29,8 @@
       "style": "Estilo",
       "overlay": "Iconos"
     },
-    "apply_to_all": "Aplicar estilo a todo"
+    "apply_to_all": "Aplicar estilo a todo",
+    "beta_badge": "Beta"
   },
   "upload": {
     "drop_title": "Arrastra tu captura aquí",
@@ -51,7 +54,12 @@
     "device_2": "Dispositivo 2",
     "device_position": "Posición del dispositivo",
     "grid": "Cuadrícula",
-    "safe_area": "Área segura"
+    "safe_area": "Área segura",
+    "reset_position": "Restablecer",
+    "reset_to_default": "Restablecer al valor predeterminado",
+    "reset_size": "Restablecer tamaño",
+    "reset_rotation": "Restablecer rotación",
+    "reset_tilt": "Restablecer inclinación"
   },
   "style": {
     "title": "Estilo",
@@ -115,7 +123,6 @@
     "headline_color": "Color del título",
     "subtitle_color": "Color del subtítulo",
     "font": "Fuente",
-    "font_loading": "Cargando fuentes…",
     "font_default": "Inter",
     "font_system": "Sistema",
     "weight": "Peso",
@@ -125,9 +132,6 @@
     "weight_700": "Negrita",
     "weight_800": "ExtNegra",
     "weight_900": "Ultra",
-    "position": "Posición del texto",
-    "position_top": "Arriba",
-    "position_bottom": "Abajo",
     "headline_placeholder": "Título principal…",
     "subtitle_placeholder": "Texto de apoyo…",
     "highlight_color": "Resaltado",
@@ -135,9 +139,23 @@
     "clear_highlight": "Limpiar",
     "clear_all_highlights": "Todo",
     "highlight_applied": "✓ Aplicado",
-    "select_text_hint": "Selecciona texto primero",
     "y_offset": "Desplazamiento Y",
-    "x_offset": "Desplazamiento X"
+    "x_offset": "Desplazamiento X",
+    "reset_size": "Restablecer al tamaño predeterminado",
+    "reset_y_offset": "Restablecer desplazamiento Y",
+    "reset_x_offset": "Restablecer desplazamiento X",
+    "align": "Alinear",
+    "align_left": "Izquierda",
+    "align_center": "Centro",
+    "align_right": "Derecha",
+    "logo_title": "Título Logo",
+    "logo_title_placeholder": "Título del logo…",
+    "logo_title_color": "Color del título logo",
+    "logo_title_offset_x": "Desplazamiento X logo",
+    "logo_title_offset_y": "Desplazamiento Y logo",
+    "reset_logo_offset_x": "Restablecer desplazamiento X logo",
+    "reset_logo_offset_y": "Restablecer desplazamiento Y logo",
+    "reset_logo_size": "Restablecer tamaño logo"
   },
   "strip": {
     "duplicate": "Duplicar",
@@ -145,6 +163,43 @@
   },
   "canvas": {
     "upload_prompt": "Sube una captura"
+  },
+  "templates": {
+    "title": "Plantillas",
+    "button": "Plantillas",
+    "cat_all": "Todo",
+    "cat_dark": "Oscuro",
+    "cat_light": "Claro",
+    "cat_vibrant": "Vibrante",
+    "cat_glass": "Cristal",
+    "cat_minimal": "Minimalista",
+    "cat_dual": "Dual",
+    "t_midnight_pro": "Medianoche Pro",
+    "t_dark_chrome": "Cromo Oscuro",
+    "t_obsidian_edge": "Borde Obsidiana",
+    "t_deep_space": "Espacio Profundo",
+    "t_shadow_play": "Juego de Sombras",
+    "t_noir": "Noir",
+    "t_clean_white": "Blanco Limpio",
+    "t_soft_gray": "Gris Suave",
+    "t_warm_cream": "Crema Cálido",
+    "t_bright_day": "Día Brillante",
+    "t_sunset_glow": "Brillo Atardecer",
+    "t_electric_blue": "Azul Eléctrico",
+    "t_rose_gold": "Rosa Dorado",
+    "t_neon_night": "Noche Neón",
+    "t_aurora": "Aurora",
+    "t_glass_light": "Cristal Claro",
+    "t_glass_dark": "Cristal Oscuro",
+    "t_liquid_crystal": "Cristal Líquido",
+    "t_flat_dark": "Plano Oscuro",
+    "t_flat_light": "Plano Claro",
+    "t_outline_dark": "Contorno Oscuro",
+    "t_outline_light": "Contorno Claro",
+    "t_side_by_side": "Lado a Lado",
+    "t_stacked_light": "Apilado Claro",
+    "t_front_back": "Frente y Fondo",
+    "t_tilt_duo": "Dúo Inclinado"
   },
   "overlay": {
     "title": "Iconos superpuestos",

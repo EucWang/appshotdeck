@@ -5,7 +5,9 @@
     "load": "Load",
     "export_all": "Export PNGs",
     "dark_mode": "Switch to dark mode",
-    "light_mode": "Switch to light mode"
+    "light_mode": "Switch to light mode",
+    "undo": "Undo (Ctrl+Z)",
+    "redo": "Redo (Ctrl+Shift+Z)"
   },
   "sidebar": {
     "format": "Format",
@@ -27,7 +29,8 @@
       "style": "Style",
       "overlay": "Icons"
     },
-    "apply_to_all": "Apply Style to All"
+    "apply_to_all": "Apply Style to All",
+    "beta_badge": "Beta"
   },
   "upload": {
     "drop_title": "Drop screenshot here",
@@ -51,7 +54,12 @@
     "device_2": "Device 2",
     "device_position": "Device Position",
     "grid": "Toggle grid",
-    "safe_area": "Toggle safe area"
+    "safe_area": "Toggle safe area",
+    "reset_position": "Reset",
+    "reset_to_default": "Reset to default",
+    "reset_size": "Reset size",
+    "reset_rotation": "Reset rotation",
+    "reset_tilt": "Reset tilt"
   },
   "style": {
     "title": "Style",
@@ -115,7 +123,6 @@
     "headline_color": "Headline Color",
     "subtitle_color": "Subtitle Color",
     "font": "Font",
-    "font_loading": "Loading fonts…",
     "font_default": "Inter",
     "font_system": "System",
     "weight": "Weight",
@@ -125,9 +132,6 @@
     "weight_700": "Bold",
     "weight_800": "ExBold",
     "weight_900": "Black",
-    "position": "Text Position",
-    "position_top": "Top",
-    "position_bottom": "Bottom",
     "headline_placeholder": "Main headline…",
     "subtitle_placeholder": "Supporting text…",
     "highlight_color": "Highlight",
@@ -135,9 +139,23 @@
     "clear_highlight": "Clear",
     "clear_all_highlights": "All",
     "highlight_applied": "✓ Applied",
-    "select_text_hint": "Select text first",
     "y_offset": "Y Offset",
-    "x_offset": "X Offset"
+    "x_offset": "X Offset",
+    "reset_size": "Reset to default size",
+    "reset_y_offset": "Reset Y offset",
+    "reset_x_offset": "Reset X offset",
+    "align": "Align",
+    "align_left": "Left",
+    "align_center": "Center",
+    "align_right": "Right",
+    "logo_title": "Logo Title",
+    "logo_title_placeholder": "Logo title…",
+    "logo_title_color": "Logo Title Color",
+    "logo_title_offset_x": "Logo X Offset",
+    "logo_title_offset_y": "Logo Y Offset",
+    "reset_logo_offset_x": "Reset logo X offset",
+    "reset_logo_offset_y": "Reset logo Y offset",
+    "reset_logo_size": "Reset logo size"
   },
   "strip": {
     "duplicate": "Duplicate",
@@ -145,6 +163,43 @@
   },
   "canvas": {
     "upload_prompt": "Upload Screenshot"
+  },
+  "templates": {
+    "title": "Templates",
+    "button": "Templates",
+    "cat_all": "All",
+    "cat_dark": "Dark",
+    "cat_light": "Light",
+    "cat_vibrant": "Vibrant",
+    "cat_glass": "Glass",
+    "cat_minimal": "Minimal",
+    "cat_dual": "Dual",
+    "t_midnight_pro": "Midnight Pro",
+    "t_dark_chrome": "Dark Chrome",
+    "t_obsidian_edge": "Obsidian Edge",
+    "t_deep_space": "Deep Space",
+    "t_shadow_play": "Shadow Play",
+    "t_noir": "Noir",
+    "t_clean_white": "Clean White",
+    "t_soft_gray": "Soft Gray",
+    "t_warm_cream": "Warm Cream",
+    "t_bright_day": "Bright Day",
+    "t_sunset_glow": "Sunset Glow",
+    "t_electric_blue": "Electric Blue",
+    "t_rose_gold": "Rose Gold",
+    "t_neon_night": "Neon Night",
+    "t_aurora": "Aurora",
+    "t_glass_light": "Glass Light",
+    "t_glass_dark": "Glass Dark",
+    "t_liquid_crystal": "Liquid Crystal",
+    "t_flat_dark": "Flat Dark",
+    "t_flat_light": "Flat Light",
+    "t_outline_dark": "Outline Dark",
+    "t_outline_light": "Outline Light",
+    "t_side_by_side": "Side by Side",
+    "t_stacked_light": "Stacked Light",
+    "t_front_back": "Front Back",
+    "t_tilt_duo": "Tilt Duo"
   },
   "overlay": {
     "title": "Overlay Icons",

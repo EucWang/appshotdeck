@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { DeviceSlot, EditorState, FrameId, ScreenshotSlot, Slide, SlideFormat } from '../types'
-import { defaultDualPresetId, presetById } from '../data/layoutPresets'
+import { defaultDualPresetId, defaultTrioPresetId, presetById } from '../data/layoutPresets'
 
 export function defaultFrameForFormat(format: SlideFormat): FrameId {
   switch (format) {
@@ -110,6 +110,21 @@ function switchToDual(slide: Slide): Partial<Slide> {
   }
 }
 
+function switchToTriple(slide: Slide): Partial<Slide> {
+  const preset = presetById(defaultTrioPresetId)!
+  const existingSlots = slide.slots && slide.slots.length >= 2
+    ? slide.slots
+    : slide.slots && slide.slots.length === 1
+      ? [slide.slots[0], emptyScreenshotSlot()]
+      : [screenshotSlotFromSlide(slide), emptyScreenshotSlot()]
+  return {
+    screenshotCount: 3,
+    slots: [...existingSlots, emptyScreenshotSlot()],
+    deviceSlots: [preset.devices[0], preset.devices[1], preset.devices[2]],
+    activePresetId: defaultTrioPresetId,
+  }
+}
+
 function switchToSingle(slide: Slide): Partial<Slide> {
   const slot0 = slide.slots?.[0]
   const dev0 = slide.deviceSlots?.[0]
@@ -127,10 +142,23 @@ function switchToSingle(slide: Slide): Partial<Slide> {
   }
 }
 
-export function toggleScreenshotCount(slide: Slide, count: 1 | 2): Partial<Slide> {
-  if (count === 2 && (slide.screenshotCount ?? 1) !== 2) return switchToDual(slide)
-  if (count === 1 && (slide.screenshotCount ?? 1) !== 1) return switchToSingle(slide)
-  return {}
+export function toggleScreenshotCount(slide: Slide, count: 1 | 2 | 3): Partial<Slide> {
+  const current = slide.screenshotCount ?? 1
+  if (count === current) return {}
+  if (count === 1) return switchToSingle(slide)
+  if (count === 2 && current === 1) return switchToDual(slide)
+  if (count === 2 && current === 3) {
+    const slots = slide.slots ?? []
+    const devSlots = slide.deviceSlots ?? []
+    const preset = presetById(defaultDualPresetId)!
+    return {
+      screenshotCount: 2,
+      slots: [slots[0] ?? screenshotSlotFromSlide(slide), slots[1] ?? emptyScreenshotSlot()],
+      deviceSlots: [devSlots[0] ?? preset.devices[0], devSlots[1] ?? preset.devices[1]],
+      activePresetId: defaultDualPresetId,
+    }
+  }
+  return switchToTriple(slide)
 }
 
 const MAX_UNDO = 50
@@ -267,8 +295,17 @@ export const useEditorStore = create<EditorState>()(
                   delete (patch as Record<string, unknown>).screenshotCount
                   delete (patch as Record<string, unknown>).deviceSlots
                   delete (patch as Record<string, unknown>).activePresetId
-                } else if (patch.deviceSlots) {
-                  patch.deviceSlots = source.deviceSlots?.map((ds) => ({ ...ds }))
+                } else {
+                  if (patch.deviceSlots) {
+                    patch.deviceSlots = source.deviceSlots?.map((ds) => ({ ...ds }))
+                  }
+                  if (source.slots && sl.slots && sl.slots.length < sourceCount) {
+                    const padded = [...sl.slots]
+                    while (padded.length < sourceCount) {
+                      padded.push(emptyScreenshotSlot())
+                    }
+                    ;(patch as Record<string, unknown>).slots = padded
+                  }
                 }
                 return { ...sl, ...patch }
               }),

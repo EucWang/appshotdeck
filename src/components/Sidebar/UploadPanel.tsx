@@ -99,11 +99,16 @@ function SlotUpload({ label, slotIndex, slide }: { label: string; slotIndex: num
           reader.readAsDataURL(file)
         })
         const compressed = await compressImage(dataUrl)
-        const currentSlots = slide.slots ?? [
-          { screenshotDataUrl: slide.screenshotDataUrl, screenshotZoom: slide.screenshotZoom ?? 100, screenshotOffsetX: slide.screenshotOffsetX ?? 0, screenshotOffsetY: slide.screenshotOffsetY ?? 0 },
-          { screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 },
-        ]
+        const count = slide.screenshotCount ?? 1
+        const currentSlots = slide.slots ?? Array.from({ length: count }, (_, i) =>
+          i === 0
+            ? { screenshotDataUrl: slide.screenshotDataUrl, screenshotZoom: slide.screenshotZoom ?? 100, screenshotOffsetX: slide.screenshotOffsetX ?? 0, screenshotOffsetY: slide.screenshotOffsetY ?? 0 }
+            : { screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 }
+        )
         const newSlots: ScreenshotSlot[] = [...currentSlots]
+        while (newSlots.length <= slotIndex) {
+          newSlots.push({ screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 })
+        }
         newSlots[slotIndex] = { ...newSlots[slotIndex], screenshotDataUrl: compressed, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 }
         updateSlide(activeSlideId, { slots: newSlots })
       } finally {
@@ -166,9 +171,9 @@ export function UploadPanel() {
   const slide = slides.find((s) => s.id === activeSlideId)
   if (!slide) return null
 
-  const isDual = (slide.screenshotCount ?? 1) === 2
+  const count = slide.screenshotCount ?? 1
 
-  if (!isDual) {
+  if (count === 1) {
     return (
       <div className="p-4 space-y-3">
         <SingleUpload />
@@ -179,8 +184,14 @@ export function UploadPanel() {
 
   return (
     <div className="p-4 space-y-3">
-      <SlotUpload label={t('upload.screenshot_1')} slotIndex={0} slide={slide} />
-      <SlotUpload label={t('upload.screenshot_2')} slotIndex={1} slide={slide} />
+      {Array.from({ length: count }, (_, i) => (
+        <SlotUpload
+          key={i}
+          label={t(`upload.screenshot_${i + 1}`)}
+          slotIndex={i}
+          slide={slide}
+        />
+      ))}
       <p className="text-xs text-black/30 dark:text-white/30 text-center">{t('upload.hint')}</p>
     </div>
   )

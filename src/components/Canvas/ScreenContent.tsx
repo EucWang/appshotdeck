@@ -54,7 +54,7 @@ export function ScreenContent({
       const sl = useEditorStore.getState().slides.find((s) => s.id === slideId)
       if (!sl) return
 
-      if (sl.screenshotCount === 2 && sl.slots) {
+      if ((sl.screenshotCount ?? 1) > 1 && sl.slots) {
         const curSlot = sl.slots[slotIdx]
         if (!curSlot) return
         const step = e.deltaY > 0 ? -10 : 10
@@ -95,7 +95,7 @@ export function ScreenContent({
 
       let startOX = 0
       let startOY = 0
-      if (sl && sl.screenshotCount === 2 && sl.slots) {
+      if (sl && (sl.screenshotCount ?? 1) > 1 && sl.slots) {
         startOX = sl.slots[slotIdx]?.screenshotOffsetX ?? 0
         startOY = sl.slots[slotIdx]?.screenshotOffsetY ?? 0
       } else if (sl) {
@@ -112,7 +112,7 @@ export function ScreenContent({
         const curSl = useEditorStore.getState().slides.find((s) => s.id === slideId)
         if (!curSl) return
 
-        if (curSl.screenshotCount === 2 && curSl.slots) {
+        if ((curSl.screenshotCount ?? 1) > 1 && curSl.slots) {
           const curSlot = curSl.slots[slotIdx]
           if (!curSlot) return
           const curZoom = curSlot.screenshotZoom
@@ -152,7 +152,7 @@ export function ScreenContent({
 
       let startOX = 0
       let startOY = 0
-      if (sl && sl.screenshotCount === 2 && sl.slots) {
+      if (sl && (sl.screenshotCount ?? 1) > 1 && sl.slots) {
         startOX = sl.slots[slotIdx]?.screenshotOffsetX ?? 0
         startOY = sl.slots[slotIdx]?.screenshotOffsetY ?? 0
       } else if (sl) {
@@ -171,7 +171,7 @@ export function ScreenContent({
         const curSl = useEditorStore.getState().slides.find((s) => s.id === slideId)
         if (!curSl) return
 
-        if (curSl.screenshotCount === 2 && curSl.slots) {
+        if ((curSl.screenshotCount ?? 1) > 1 && curSl.slots) {
           const curSlot = curSl.slots[slotIdx]
           if (!curSlot) return
           const curZoom = curSlot.screenshotZoom

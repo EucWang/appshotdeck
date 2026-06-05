@@ -38,7 +38,8 @@
     "compressing": "Compressing…",
     "hint": "PNG, JPG, WebP · auto-compressed to <900 KB",
     "screenshot_1": "Screenshot 1",
-    "screenshot_2": "Screenshot 2"
+    "screenshot_2": "Screenshot 2",
+    "screenshot_3": "Screenshot 3"
   },
   "frame": {
     "title": "Device Frame",
@@ -52,6 +53,8 @@
     "presets": "Layout Presets",
     "device_1": "Device 1",
     "device_2": "Device 2",
+    "device_3": "Device 3",
+    "webgl_context_lost": "WebGL context lost. Please reload the page.",
     "device_position": "Device Position",
     "grid": "Toggle grid",
     "safe_area": "Toggle safe area",

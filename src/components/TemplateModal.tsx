@@ -19,7 +19,7 @@ function bgStyle(bg: TemplateDef['patch']['background']): React.CSSProperties {
 
 function TemplatePreview({ template }: { template: TemplateDef }) {
   const { patch } = template
-  const isDual = patch.screenshotCount === 2
+  const deviceCount = patch.screenshotCount ?? 1
   const textAtTop = patch.textPosition === 'top'
 
   const textBlock = (
@@ -35,21 +35,15 @@ function TemplatePreview({ template }: { template: TemplateDef }) {
     </div>
   )
 
-  const deviceShape = (w: string) => (
-    <div
-      className={`${w} aspect-[9/17] rounded-sm`}
-      style={{ background: 'rgba(128,128,128,0.25)', border: '1px solid rgba(128,128,128,0.2)' }}
-    />
-  )
-
-  const deviceArea = isDual ? (
-    <div className="flex-1 flex items-center justify-center gap-1 pb-2">
-      {deviceShape('w-[22%]')}
-      {deviceShape('w-[22%]')}
-    </div>
-  ) : (
-    <div className="flex-1 flex items-center justify-center pb-2">
-      {deviceShape('w-[36%]')}
+  const deviceArea = (
+    <div className={`flex-1 flex items-center justify-center ${deviceCount > 1 ? 'gap-1' : ''} pb-2`}>
+      {Array.from({ length: deviceCount }, (_, i) => (
+        <div
+          key={i}
+          className={`${deviceCount > 1 ? 'w-[22%]' : 'w-[36%]'} aspect-[9/17] rounded-sm`}
+          style={{ background: 'rgba(128,128,128,0.25)', border: '1px solid rgba(128,128,128,0.2)' }}
+        />
+      ))}
     </div>
   )
 

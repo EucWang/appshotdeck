@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import i18n from 'i18next'
 import type { Device3DSpec } from '../../data/frames'
 import type { ShadowMode } from '../../types'
 
@@ -215,6 +216,12 @@ export function Device3D({ spec, slotW, slotH, vbW, tilt, rotate, screenshotData
       flat
       dpr={window.devicePixelRatio}
       resize={{ offsetSize: true }}
+      onCreated={(state) => {
+        state.gl.domElement.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault()
+          alert(i18n.t('frame.webgl_context_lost'))
+        })
+      }}
     >
       <SizeEnforcer w={slotW} h={slotH} />
 

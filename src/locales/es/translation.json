@@ -38,7 +38,8 @@
     "compressing": "Comprimiendo…",
     "hint": "PNG, JPG, WebP · comprimido automáticamente a <900 KB",
     "screenshot_1": "Captura 1",
-    "screenshot_2": "Captura 2"
+    "screenshot_2": "Captura 2",
+    "screenshot_3": "Captura 3"
   },
   "frame": {
     "title": "Marco de dispositivo",
@@ -52,6 +53,8 @@
     "presets": "Diseños predefinidos",
     "device_1": "Dispositivo 1",
     "device_2": "Dispositivo 2",
+    "device_3": "Dispositivo 3",
+    "webgl_context_lost": "Contexto WebGL perdido. Por favor, recarga la página.",
     "device_position": "Posición del dispositivo",
     "grid": "Cuadrícula",
     "safe_area": "Área segura",

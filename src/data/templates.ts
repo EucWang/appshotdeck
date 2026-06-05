@@ -31,7 +31,7 @@ export interface TemplateDef {
     deviceOffset: number
     deviceScale: number
     deviceRotate: number
-    screenshotCount: 1 | 2
+    screenshotCount: 1 | 2 | 3
     deviceSlots: DeviceSlot[]
     activePresetId: string | null
   }

@@ -48,12 +48,51 @@ export const layoutPresets: LayoutPresetDef[] = [
       { deviceOffset: 26, deviceOffsetX: 10, deviceScale: 62, deviceRotate: 10 },
     ],
   },
+
+  {
+    id: 'trio-row',
+    screenshotCount: 3,
+    devices: [
+      { deviceOffset: 20, deviceOffsetX: -18, deviceScale: 48, deviceRotate: -5 },
+      { deviceOffset: 22, deviceOffsetX: 0, deviceScale: 48, deviceRotate: 0 },
+      { deviceOffset: 24, deviceOffsetX: 18, deviceScale: 48, deviceRotate: 5 },
+    ],
+  },
+  {
+    id: 'trio-stack',
+    screenshotCount: 3,
+    devices: [
+      { deviceOffset: -12, deviceOffsetX: 0, deviceScale: 38, deviceRotate: 0 },
+      { deviceOffset: 6, deviceOffsetX: 0, deviceScale: 38, deviceRotate: 0 },
+      { deviceOffset: 24, deviceOffsetX: 0, deviceScale: 38, deviceRotate: 0 },
+    ],
+  },
+  {
+    id: 'trio-fan',
+    screenshotCount: 3,
+    devices: [
+      { deviceOffset: 18, deviceOffsetX: -14, deviceScale: 50, deviceRotate: -12 },
+      { deviceOffset: 24, deviceOffsetX: 0, deviceScale: 55, deviceRotate: 0 },
+      { deviceOffset: 18, deviceOffsetX: 14, deviceScale: 50, deviceRotate: 12 },
+    ],
+  },
+  {
+    id: 'trio-pyramid',
+    screenshotCount: 3,
+    devices: [
+      { deviceOffset: 8, deviceOffsetX: 0, deviceScale: 42, deviceRotate: 0 },
+      { deviceOffset: 28, deviceOffsetX: -12, deviceScale: 44, deviceRotate: -6 },
+      { deviceOffset: 28, deviceOffsetX: 12, deviceScale: 44, deviceRotate: 6 },
+    ],
+  },
 ]
 
-export const presetsForCount = (count: 1 | 2): LayoutPresetDef[] =>
+export const presetsForCount = (count: 1 | 2 | 3): LayoutPresetDef[] =>
   layoutPresets.filter((p) => p.screenshotCount === count)
 
 export const presetById = (id: string): LayoutPresetDef | undefined =>
   layoutPresets.find((p) => p.id === id)
 
 export const defaultDualPresetId = 'duo-side'
+
+export const defaultTrioPresetId = 'trio-row'

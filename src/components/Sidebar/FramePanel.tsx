@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { RotateCcw, AlignCenterHorizontal, AlignCenterVertical, Grid3x3, Shield } from 'lucide-react'
-import { useEditorStore } from '../../store/useEditorStore'
+import { useEditorStore, toggleScreenshotCount } from '../../store/useEditorStore'
 import { framesForFormat, frameById } from '../../data/frames'
 import { presetsForCount, presetById } from '../../data/layoutPresets'
 import type { DeviceSlot, Slide } from '../../types'
@@ -14,8 +14,8 @@ const DEFAULT_OFFSET: Record<string, number> = {
   'tablet-7': 16, 'tablet-10': 16,
 }
 
-function PresetThumbnail({ preset }: { preset: { id: string; screenshotCount: 1 | 2; devices: DeviceSlot[] } }) {
-  const isDual = preset.screenshotCount === 2
+function PresetThumbnail({ preset }: { preset: { id: string; screenshotCount: 1 | 2 | 3; devices: DeviceSlot[] } }) {
+  const isMulti = preset.screenshotCount > 1
   return (
     <div className="relative w-full aspect-[4/3] rounded-md overflow-hidden bg-black/10 dark:bg-white/10">
       {preset.devices.map((dev, i) => {
@@ -23,7 +23,7 @@ function PresetThumbnail({ preset }: { preset: { id: string; screenshotCount: 1 
         const offsetY = dev.deviceOffset
         const offsetX = dev.deviceOffsetX ?? 0
         const rotate = dev.deviceRotate
-        const leftPct = isDual ? 50 + offsetX * 1.5 : 50
+        const leftPct = isMulti ? 50 + offsetX * 1.5 : 50
         const topPct = 50 + offsetY * 1.2
         return (
           <div
@@ -32,7 +32,7 @@ function PresetThumbnail({ preset }: { preset: { id: string; screenshotCount: 1 
               position: 'absolute',
               left: `${leftPct}%`,
               top: `${topPct}%`,
-              width: `${scale * 28}%`,
+              width: `${scale * (preset.screenshotCount === 3 ? 22 : 28)}%`,
               aspectRatio: '9/16',
               transform: `translate(-50%, -50%) rotate(${rotate}deg)`,
               borderRadius: 3,
@@ -62,30 +62,36 @@ function DeviceSliders({
   const { t } = useTranslation()
   const { activeSlideId, updateSlide } = useEditorStore()
 
-  const isDual = (slide.screenshotCount ?? 1) === 2
-  const devSlot = isDual
+  const count = slide.screenshotCount ?? 1
+  const isMulti = count > 1
+  const devSlot = isMulti
     ? (slide.deviceSlots?.[slotIndex] ?? { deviceOffset: 0, deviceOffsetX: 0, deviceScale: 100, deviceRotate: 0 })
     : { deviceOffset: slide.deviceOffset, deviceOffsetX: 0, deviceScale: slide.deviceScale, deviceRotate: slide.deviceRotate ?? 0 }
 
   const setSlotField = (field: keyof DeviceSlot, value: number) => {
-    if (!isDual) {
+    if (!isMulti) {
       updateSlide(activeSlideId, { [field]: value })
       return
     }
-    const slots = slide.deviceSlots ? [...slide.deviceSlots] : [
-      { deviceOffset: slide.deviceOffset, deviceOffsetX: 0, deviceScale: slide.deviceScale, deviceRotate: slide.deviceRotate ?? 0 },
-      { deviceOffset: 0, deviceOffsetX: 0, deviceScale: 78, deviceRotate: 0 },
-    ]
+    const slots = slide.deviceSlots ? [...slide.deviceSlots] : Array.from(
+      { length: Math.max(count, 2) },
+      (_, i) => i === 0
+        ? { deviceOffset: slide.deviceOffset, deviceOffsetX: 0, deviceScale: slide.deviceScale, deviceRotate: slide.deviceRotate ?? 0 }
+        : { deviceOffset: 0, deviceOffsetX: 0, deviceScale: 78, deviceRotate: 0 }
+    )
+    while (slots.length <= slotIndex) {
+      slots.push({ deviceOffset: 0, deviceOffsetX: 0, deviceScale: 78, deviceRotate: 0 })
+    }
     slots[slotIndex] = { ...slots[slotIndex], [field]: value }
     updateSlide(activeSlideId, { deviceSlots: slots, activePresetId: null })
   }
 
-  const zoomVal = isDual
+  const zoomVal = isMulti
     ? (slide.slots?.[slotIndex]?.screenshotZoom ?? 100)
     : (slide.screenshotZoom ?? 100)
 
   const setZoom = (val: number) => {
-    if (!isDual) {
+    if (!isMulti) {
       const newMax = Math.max(0, (val / 100 - 1) * 50)
       updateSlide(activeSlideId, {
         screenshotZoom: val,
@@ -94,10 +100,15 @@ function DeviceSliders({
       })
       return
     }
-    const slots = slide.slots ? [...slide.slots] : [
-      { screenshotDataUrl: slide.screenshotDataUrl, screenshotZoom: slide.screenshotZoom ?? 100, screenshotOffsetX: slide.screenshotOffsetX ?? 0, screenshotOffsetY: slide.screenshotOffsetY ?? 0 },
-      { screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 },
-    ]
+    const slots = slide.slots ? [...slide.slots] : Array.from(
+      { length: Math.max(count, 2) },
+      (_, i) => i === 0
+        ? { screenshotDataUrl: slide.screenshotDataUrl, screenshotZoom: slide.screenshotZoom ?? 100, screenshotOffsetX: slide.screenshotOffsetX ?? 0, screenshotOffsetY: slide.screenshotOffsetY ?? 0 }
+        : { screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 }
+    )
+    while (slots.length <= slotIndex) {
+      slots.push({ screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 })
+    }
     const cur = slots[slotIndex]
     const newMax = Math.max(0, (val / 100 - 1) * 50)
     slots[slotIndex] = {
@@ -124,7 +135,7 @@ function DeviceSliders({
         </span>
         <button
           onClick={() => {
-            if (!isDual) {
+            if (!isMulti) {
               updateSlide(activeSlideId, { deviceOffset: 0 })
             } else {
               setSlotField('deviceOffset', 0)
@@ -137,7 +148,7 @@ function DeviceSliders({
         </button>
         <button
           onClick={() => {
-            if (!isDual) {
+            if (!isMulti) {
               updateSlide(activeSlideId, { deviceOffset: DEFAULT_OFFSET[format] ?? 0 })
             } else {
               setSlotField('deviceOffset', DEFAULT_OFFSET[format] ?? 0)
@@ -149,7 +160,7 @@ function DeviceSliders({
           <RotateCcw size={14} />
         </button>
       </div>
-      {isDual && (
+      {isMulti && (
         <div className="flex items-center gap-2 pr-1">
           <span className="text-xs text-muted w-7 flex-shrink-0">PosX</span>
           <input
@@ -233,41 +244,11 @@ export function FramePanel() {
   const available = framesForFormat(slide.format)
   const activeFrame = frameById(slide.frame)
   const count = slide.screenshotCount ?? 1
-  const isDual = count === 2
 
-  const handleCountChange = (newCount: 1 | 2) => {
+  const handleCountChange = (newCount: 1 | 2 | 3) => {
     if (newCount === count) return
-    if (newCount === 2) {
-      const preset = presetById('duo-side')!
-      updateSlide(activeSlideId, {
-        screenshotCount: 2,
-        slots: [
-          {
-            screenshotDataUrl: slide.screenshotDataUrl ?? null,
-            screenshotZoom: slide.screenshotZoom ?? 100,
-            screenshotOffsetX: slide.screenshotOffsetX ?? 0,
-            screenshotOffsetY: slide.screenshotOffsetY ?? 0,
-          },
-          { screenshotDataUrl: null, screenshotZoom: 100, screenshotOffsetX: 0, screenshotOffsetY: 0 },
-        ],
-        deviceSlots: [preset.devices[0], preset.devices[1]],
-        activePresetId: 'duo-side',
-      })
-    } else {
-      const slot0 = slide.slots?.[0]
-      const dev0 = slide.deviceSlots?.[0]
-      updateSlide(activeSlideId, {
-        screenshotCount: 1,
-        screenshotDataUrl: slot0?.screenshotDataUrl ?? slide.screenshotDataUrl,
-        screenshotZoom: slot0?.screenshotZoom ?? slide.screenshotZoom,
-        screenshotOffsetX: slot0?.screenshotOffsetX ?? slide.screenshotOffsetX,
-        screenshotOffsetY: slot0?.screenshotOffsetY ?? slide.screenshotOffsetY,
-        deviceOffset: dev0?.deviceOffset ?? slide.deviceOffset,
-        deviceScale: dev0?.deviceScale ?? slide.deviceScale,
-        deviceRotate: dev0?.deviceRotate ?? slide.deviceRotate,
-        activePresetId: null,
-      })
-    }
+    const patch = toggleScreenshotCount(slide, newCount)
+    updateSlide(activeSlideId, patch)
   }
 
   const handleApplyPreset = (presetId: string) => {
@@ -278,8 +259,6 @@ export function FramePanel() {
       activePresetId: presetId,
     })
   }
-
-  const dualPresets = presetsForCount(2)
 
   return (
     <div className="p-4 space-y-2">
@@ -337,13 +316,23 @@ export function FramePanel() {
             >
               2
             </button>
+            <button
+              onClick={() => handleCountChange(3)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                count === 3
+                  ? 'bg-indigo-500/25 border border-indigo-400 text-indigo-300'
+                  : 'option-idle border'
+              }`}
+            >
+              3
+            </button>
           </div>
 
-          {isDual && (
+          {(count === 2 || count === 3) && (
             <div className="pt-1">
               <p className="text-xs text-muted mb-2">{t('frame.presets')}</p>
-              <div className="grid grid-cols-3 gap-2">
-                {dualPresets.map((preset) => (
+              <div className={count === 3 ? 'grid grid-cols-4 gap-2' : 'grid grid-cols-3 gap-2'}>
+                {presetsForCount(count).map((preset) => (
                   <button
                     key={preset.id}
                     onClick={() => handleApplyPreset(preset.id)}
@@ -360,7 +349,7 @@ export function FramePanel() {
             </div>
           )}
 
-          {isDual ? (
+          {count > 1 ? (
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted font-medium">{t('frame.device_position')}</p>
@@ -389,8 +378,16 @@ export function FramePanel() {
                   </button>
                 </div>
               </div>
-              <DeviceSliders label={t('frame.device_1')} slide={slide} slotIndex={0} format={slide.format} showZoom={isDual} />
-              <DeviceSliders label={t('frame.device_2')} slide={slide} slotIndex={1} format={slide.format} showZoom={isDual} />
+              {Array.from({ length: count }, (_, i) => (
+                <DeviceSliders
+                  key={i}
+                  label={t(`frame.device_${i + 1}`)}
+                  slide={slide}
+                  slotIndex={i}
+                  format={slide.format}
+                  showZoom
+                />
+              ))}
             </div>
           ) : (
             <div className="space-y-1 pt-2">

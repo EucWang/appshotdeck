@@ -322,14 +322,14 @@ function DeviceFrame({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const bgBright = useMemo(() => bgBrightness(slide), [slide.background])
 
-  const isDual = (slide.screenshotCount ?? 1) === 2
+  const isMulti = (slide.screenshotCount ?? 1) > 1
   let devSlot: DeviceSlot
   let screenshotDataUrl: string | null
   let screenshotZoom: number
   let screenshotOffsetX: number
   let screenshotOffsetY: number
 
-  if (isDual) {
+  if (isMulti) {
     devSlot = slide.deviceSlots?.[slotIndex] ?? { deviceOffset: 0, deviceScale: 78, deviceRotate: 0 }
     const sSlot = slide.slots?.[slotIndex]
     screenshotDataUrl = sSlot?.screenshotDataUrl ?? null
@@ -578,7 +578,7 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const bgBright = useMemo(() => bgBrightness(slide), [slide.background])
 
-    const isDual = (slide.screenshotCount ?? 1) === 2
+    const count = slide.screenshotCount ?? 1
     const interactive = scale !== 1
 
     const headlineSize = slide.headlineFontSize ?? Math.round(W * (landscape ? 0.036 : 0.063))
@@ -701,14 +701,9 @@ export const SlideCanvas = forwardRef<HTMLDivElement, Props>(
           </div>
         )}
 
-        {isDual ? (
-          <>
-            <DeviceFrame slide={slide} fmt={fmt} slotIndex={0} interactive={interactive} />
-            <DeviceFrame slide={slide} fmt={fmt} slotIndex={1} interactive={interactive} />
-          </>
-        ) : (
-          <DeviceFrame slide={slide} fmt={fmt} slotIndex={0} interactive={interactive} />
-        )}
+        {Array.from({ length: Math.max(count, 1) }, (_, i) => (
+          <DeviceFrame key={i} slide={slide} fmt={fmt} slotIndex={i} interactive={interactive} />
+        ))}
 
         {(slide.showGrid ?? false) && interactive && (
           <GridOverlay W={W} H={H} bright={bgBright} />

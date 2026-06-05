@@ -65,7 +65,7 @@ export interface DeviceSlot {
 
 export interface LayoutPresetDef {
   id: string
-  screenshotCount: 1 | 2
+  screenshotCount: 1 | 2 | 3
   devices: DeviceSlot[]
 }
 
@@ -114,7 +114,7 @@ export interface Slide {
   textOffsetY?: number
   textOffsetX?: number
   textAlign?: TextAlign
-  screenshotCount?: 1 | 2
+  screenshotCount?: 1 | 2 | 3
   slots?: ScreenshotSlot[]
   deviceSlots?: DeviceSlot[]
   activePresetId?: string | null

@@ -38,7 +38,8 @@
     "compressing": "压缩中…",
     "hint": "PNG、JPG、WebP · 自动压缩至 <900 KB",
     "screenshot_1": "截图 1",
-    "screenshot_2": "截图 2"
+    "screenshot_2": "截图 2",
+    "screenshot_3": "截图 3"
   },
   "frame": {
     "title": "设备边框",
@@ -52,6 +53,8 @@
     "presets": "布局预设",
     "device_1": "设备 1",
     "device_2": "设备 2",
+    "device_3": "设备 3",
+    "webgl_context_lost": "WebGL 上下文丢失，请重新加载页面。",
     "device_position": "设备位置",
     "grid": "网格",
     "safe_area": "安全区域",

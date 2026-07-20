@@ -25,3 +25,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+
+# Wrangler production config (contains private custom domain routes)
+# Copy wrangler.example.jsonc → wrangler.jsonc and edit before deploying
+wrangler.jsonc
+!wrangler.example.jsonc

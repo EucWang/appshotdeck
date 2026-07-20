@@ -28,6 +28,97 @@ npm run lint      # eslint .
 
 Run `npm run build` to verify TypeScript compilation after changes. Run `npm run lint` before committing.
 
+## Deployment
+
+AppShotDeck 部署在 Cloudflare Workers（Static Assets 模式），使用 `@cloudflare/vite-plugin` 集成构建。无后端、无服务端函数，所有逻辑在浏览器中运行，仅静态资源由 Cloudflare 全球边缘网络托管。
+
+### 线上环境
+
+| 项 | 值 |
+|---|---|
+| 资源类型 | Cloudflare Worker + Static Assets |
+| Worker 名称 | `appshotdeck` |
+| 自定义域名 | `https://appshot.handyreader.top` |
+| Workers.dev 备用域名 | `https://appshotdeck.<account-subdomain>.workers.dev` |
+| 路由回退 | SPA 模式（`not_found_handling: single-page-application`） |
+
+### 配置文件结构（含隐私处理）
+
+| 文件 | 是否追踪 | 作用 |
+|---|---|---|
+| `wrangler.example.jsonc` | ✓ 公开 | 模板，含占位符 `<your-domain>.example.com` |
+| `wrangler.jsonc` | ✗ gitignore | 实际部署配置，含真实域名 routes |
+| `vite.config.ts` | ✓ 公开 | `@cloudflare/vite-plugin` 自动生成 `dist/wrangler.json` |
+| `package.json` | ✓ 公开 | `scripts.deploy` = `tsc -b && vite build && wrangler deploy` |
+
+**首次克隆仓库后必须做：**
+```bash
+cp wrangler.example.jsonc wrangler.jsonc
+# 然后编辑 wrangler.jsonc，把 <your-domain>.example.com 替换为真实域名
+```
+
+### 部署命令
+
+首次使用需要登录（浏览器授权一次即可）：
+```bash
+npx wrangler login
+```
+
+每次发布：
+```bash
+npm run deploy
+# 等同于：tsc -b && vite build && wrangler deploy
+```
+
+可选：本地预览构建产物：
+```bash
+npm run preview      # 等同于：npm run build && wrangler dev
+```
+
+### 自定义域名（IaC）
+
+域名通过 `wrangler.jsonc` 的 `routes` 字段声明式配置：
+
+```jsonc
+"routes": [
+  { "pattern": "appshot.handyreader.top", "custom_domain": true }
+]
+```
+
+`custom_domain: true` 让 Cloudflare 自动管理 DNS 记录与 SSL 证书（前提：根域名在同一 Cloudflare 账号的 Zone 中）。
+
+如需添加更多域名，编辑 `wrangler.jsonc` 的 `routes` 数组后重新 `npm run deploy`。
+
+### 日志与监控
+
+`wrangler.jsonc` 中 `observability.enabled: true` 启用 Workers Logs。
+Dashboard → Workers & Pages → appshotdeck → Logs 查看实时请求与异常。
+
+### 故障排查
+
+| 现象 | 可能原因 / 处理 |
+|---|---|
+| `wrangler deploy` 报 "not authenticated" | 重新执行 `npx wrangler login` |
+| 自定义域名 502 / DNS 未生效 | 确认根域名在同账号的 Cloudflare Zone 中；Dashboard → DNS 检查记录是否生成 |
+| 部署成功但访问 404 | 确认 `assets.not_found_handling: "single-page-application"` 仍在 wrangler.jsonc 中 |
+| 刷新子路由返回 404 | 同上（SPA 路由回退未生效） |
+| `tsc -b` 类型错误 | 修复 TS 错误，否则部署会中断 |
+| 添加新域名后报冲突 | 检查 Dashboard 是否已存在同名路由；删掉重复项后重新部署 |
+| 新克隆仓库后 `wrangler deploy` 报找不到配置 | 执行 `cp wrangler.example.jsonc wrangler.jsonc` 并填入真实域名 |
+
+### 与 Cloudflare Pages 的区别
+
+本项目使用 **Workers + Static Assets**（Cloudflare 推荐的新一代静态托管方式），不是传统的 Cloudflare Pages。两者区别：
+
+| 维度 | Workers + Static Assets | 传统 Pages |
+|---|---|---|
+| 部署方式 | `wrangler deploy`（CLI） | Git 推送 / Dashboard 上传 |
+| 配置位置 | `wrangler.jsonc`（声明式 IaC） | Dashboard 设置 |
+| 域名 | `*.workers.dev` 或自定义 | `*.pages.dev` 或自定义 |
+| 后端函数 | Workers（同环境） | Pages Functions |
+
+如果 Dashboard 上仍有同名 `appshotdeck` Pages 项目，建议删除以避免子域名冲突。
+
 ## Directory Structure
 
 ```
